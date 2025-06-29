@@ -195,27 +195,39 @@
       alert("Enter valid Amount Paid first");
       return;
     }
-    let upiUrl = `upi://pay?pa=paytmqr5hyx5o@ptys&am=${amount}&cu=INR`;
+    let upiUrl = `upi://pay?pa=paytmqr5hyx5o@ptys&pn=GamesPlanet&am=${amount}&cu=INR`;
     window.location.href = upiUrl;
   }
 
   function sendOrder(){
+    // Generate Order ID
+    let now = new Date();
+    let orderId = 
+      String(now.getDate()).padStart(2,'0') +
+      String(now.getMonth()+1).padStart(2,'0') +
+      now.getFullYear() +
+      String(now.getHours()).padStart(2,'0') +
+      String(now.getMinutes()).padStart(2,'0') +
+      String(now.getSeconds()).padStart(2,'0') +
+      '00';
+
     let msg = `🟢 *Prepaid Order on WhatsApp*\\n\\n` +
-      `Name: ${document.getElementById("name").value}\\n` +
-      `Mobile: ${document.getElementById("mobile").value}\\n` +
-      `Alt Mobile: ${document.getElementById("altmobile").value}\\n` +
-      `Email: ${document.getElementById("email").value}\\n` +
-      `Address: ${document.getElementById("address").value}\\n` +
-      `Landmark: ${document.getElementById("landmark").value}\\n` +
-      `Pincode: ${document.getElementById("pincode").value}\\n` +
-      `State: ${document.getElementById("state").value}\\n` +
-      `District/City: ${document.getElementById("city").value}\\n` +
-      `Post office: ${document.getElementById("postoffice").value}\\n\\n` +
-      `Product: ${document.getElementById("product").value}\\n` +
-      `Variant: ${document.getElementById("variant").value}\\n` +
-      `Base Price: ${document.getElementById("baseprice").value}\\n` +
-      `Discount Applied: ${document.getElementById("discount").value}\\n` +
-      `Amount Paid: ${document.getElementById("amountpaid").value}`;
+      `*Order ID:* ${orderId}\\n` +
+      `*Name:* ${document.getElementById("name").value}\\n` +
+      `*Mobile:* ${document.getElementById("mobile").value}\\n` +
+      `*Alt Mobile:* ${document.getElementById("altmobile").value}\\n` +
+      `*Email:* ${document.getElementById("email").value}\\n` +
+      `*Address:* ${document.getElementById("address").value}\\n` +
+      `*Landmark:* ${document.getElementById("landmark").value}\\n` +
+      `*Pincode:* ${document.getElementById("pincode").value}\\n` +
+      `*State:* ${document.getElementById("state").value}\\n` +
+      `*District/City:* ${document.getElementById("city").value}\\n` +
+      `*Post office:* ${document.getElementById("postoffice").value}\\n\\n` +
+      `*Product:* ${document.getElementById("product").value}\\n` +
+      `*Variant:* ${document.getElementById("variant").value}\\n` +
+      `*Base Price:* ₹${document.getElementById("baseprice").value}\\n` +
+      `*Discount Applied:* ₹${document.getElementById("discount").value}\\n` +
+      `*Amount Paid:* ₹${document.getElementById("amountpaid").value}`;
 
     let encodedMsg = encodeURIComponent(msg);
     window.location.href = `https://wa.me/917983624797?text=${encodedMsg}`;
