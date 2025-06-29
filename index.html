@@ -44,6 +44,30 @@
 
   <input type="text" id="product" placeholder="Product">
 
+  <select id="modelSelect" style="display:none;">
+    <option value="">Select PS2 Model</option>
+    <option value="Fat">Fat</option>
+    <option value="Slim 7xxxx">Slim 7xxxx</option>
+    <option value="Slim 9xxxx">Slim 9xxxx</option>
+  </select>
+
+  <select id="gbSelect" style="display:none;">
+    <option value="">Select GB Variant</option>
+    <option value="64GB Top">64GB Top Games</option>
+    <option value="64GB Optional">64GB Optional Games</option>
+    <option value="128GB Top">128GB Top Games</option>
+    <option value="128GB Optional">128GB Optional Games</option>
+    <option value="256GB Top">256GB Top Games</option>
+    <option value="256GB Optional">256GB Optional Games</option>
+    <option value="500GB Top">500GB Top Games</option>
+    <option value="500GB Optional">500GB Optional Games</option>
+  </select>
+
+  <input type="text" id="variant" placeholder="Variant">
+  <input type="number" id="baseprice" placeholder="Base Price">
+  <input type="text" id="discount" placeholder="Discount Applied">
+  <input type="number" id="amountpaid" placeholder="Amount Paid">
+
   <button class="pay-btn" onclick="payNow()">Pay Now</button>
   <button class="order-btn" onclick="sendOrder()">Submit Order Now</button>
 
@@ -51,6 +75,13 @@
   <img src="https://gamesplanet13.github.io/Ordernow/qr.jpg" alt="Paytm QR" id="qr-image"/>
 
   <script>
+  const comboPrices = {
+    "64GB Top": 1499, "64GB Optional": 1599,
+    "128GB Top": 1999, "128GB Optional": 2199,
+    "256GB Top": 3499, "256GB Optional": 3999,
+    "500GB Top": 3699, "500GB Optional": 4299
+  };
+
   function getDeliveryEstimate(distance) {
     if(distance <= 500){
       return "2-4 days (sometimes 5-6 days)";
@@ -65,37 +96,16 @@
 
   function getDistanceFromRampur(state) {
     let distances = {
-      "Andhra Pradesh": 1650,
-      "Arunachal Pradesh": 1750,
-      "Assam": 1450,
-      "Bihar": 900,
-      "Chhattisgarh": 1100,
-      "Goa": 1900,
-      "Gujarat": 1100,
-      "Haryana": 430,
-      "Himachal Pradesh": 530,
-      "Jharkhand": 1100,
-      "Karnataka": 2100,
-      "Kerala": 2600,
-      "Madhya Pradesh": 850,
-      "Maharashtra": 1500,
-      "Manipur": 1800,
-      "Meghalaya": 1600,
-      "Mizoram": 1850,
-      "Nagaland": 1800,
-      "Odisha": 1400,
-      "Punjab": 430,
-      "Rajasthan": 480,
-      "Sikkim": 1350,
-      "Tamil Nadu": 2100,
-      "Telangana": 1500,
-      "Tripura": 1750,
-      "Uttar Pradesh": 360,
-      "Uttarakhand": 260,
-      "West Bengal": 1350,
+      "Andhra Pradesh": 1650, "Arunachal Pradesh": 1750, "Assam": 1450, "Bihar": 900,
+      "Chhattisgarh": 1100, "Goa": 1900, "Gujarat": 1100, "Haryana": 430,
+      "Himachal Pradesh": 530, "Jharkhand": 1100, "Karnataka": 2100, "Kerala": 2600,
+      "Madhya Pradesh": 850, "Maharashtra": 1500, "Manipur": 1800, "Meghalaya": 1600,
+      "Mizoram": 1850, "Nagaland": 1800, "Odisha": 1400, "Punjab": 430,
+      "Rajasthan": 480, "Sikkim": 1350, "Tamil Nadu": 2100, "Telangana": 1500,
+      "Tripura": 1750, "Uttar Pradesh": 360, "Uttarakhand": 260, "West Bengal": 1350,
       "Delhi": 180
     };
-    return distances[state] || 1800; // default if state not listed
+    return distances[state] || 1800;
   }
 
   document.getElementById("pincode").addEventListener("input", function(){
@@ -112,10 +122,8 @@
           document.getElementById("state").value = state;
           document.getElementById("city").value = district;
 
-          // populate post office select
           let poSelect = document.getElementById("postoffice");
-          poSelect.innerHTML = '<option value="">Select Post Office</option>'; // clear old options
-
+          poSelect.innerHTML = '<option value="">Select Post Office</option>';
           postOffices.forEach(po => {
             let opt = document.createElement("option");
             opt.value = po.Name;
@@ -137,8 +145,52 @@
     }
   });
 
+  document.getElementById("product").addEventListener("input", function(){
+    let prod = this.value.toLowerCase();
+    if(prod.includes("fmcb")){
+      document.getElementById("modelSelect").style.display = "block";
+    } else {
+      document.getElementById("modelSelect").style.display = "none";
+      document.getElementById("gbSelect").style.display = "none";
+    }
+    if(prod.includes("fmcb") && !prod.includes("usb")){
+      document.getElementById("baseprice").value = 999;
+      document.getElementById("discount").value = "100";
+      document.getElementById("amountpaid").value = 899;
+    }
+  });
+
+  document.getElementById("modelSelect").addEventListener("change", function(){
+    let prod = document.getElementById("product").value.toLowerCase();
+    let model = this.value;
+    document.getElementById("variant").value = model;
+
+    if(prod.includes("fmcb") && !prod.includes("usb")){
+      document.getElementById("baseprice").value = 999;
+      document.getElementById("discount").value = "100";
+      document.getElementById("amountpaid").value = 899;
+    }
+    if(prod.includes("fmcb + usb")){
+      document.getElementById("gbSelect").style.display = "block";
+    }
+  });
+
+  document.getElementById("gbSelect").addEventListener("change", function(){
+    let model = document.getElementById("modelSelect").value;
+    let gb = this.value;
+    document.getElementById("variant").value = model + " " + gb;
+
+    let baseprice = comboPrices[gb] || 0;
+    let discount = gb.includes("Optional") ? 0 : 100;
+    let amountpaid = baseprice - discount;
+
+    document.getElementById("baseprice").value = baseprice;
+    document.getElementById("discount").value = discount;
+    document.getElementById("amountpaid").value = amountpaid;
+  });
+
   function payNow(){
-    let amount = document.getElementById("amountpaid") ? document.getElementById("amountpaid").value : "";
+    let amount = document.getElementById("amountpaid").value;
     if(amount=='' || parseFloat(amount)<=0){
       alert("Enter valid Amount Paid first");
       return;
@@ -159,7 +211,11 @@
       `State: ${document.getElementById("state").value}\\n` +
       `District/City: ${document.getElementById("city").value}\\n` +
       `Post office: ${document.getElementById("postoffice").value}\\n\\n` +
-      `Product: ${document.getElementById("product").value}`;
+      `Product: ${document.getElementById("product").value}\\n` +
+      `Variant: ${document.getElementById("variant").value}\\n` +
+      `Base Price: ${document.getElementById("baseprice").value}\\n` +
+      `Discount Applied: ${document.getElementById("discount").value}\\n` +
+      `Amount Paid: ${document.getElementById("amountpaid").value}`;
 
     let encodedMsg = encodeURIComponent(msg);
     window.location.href = `https://wa.me/917983624797?text=${encodedMsg}`;
