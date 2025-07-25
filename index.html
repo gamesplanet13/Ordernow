@@ -1,65 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Games Planet Order Form – ETA Final</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    input, select, textarea {
-      width: 90%; max-width: 400px; margin: 5px auto; padding: 10px;
-      font-size: 16px; display: block; border-radius: 5px; border: 1px solid #ccc;
-    }
-    button {
-      padding: 15px 25px; font-size: 18px; margin: 10px;
-      border: none; border-radius: 5px; cursor: pointer;
-    }
-    .pay-btn { background-color: #00b9f5; color: white; }
-    .order-btn { background-color: #28a745; color: white; }
-    img { width: 250px; margin: 20px 0; }
-    #deliveryEstimate { font-size: 16px; color: green; margin-top: 10px; white-space: pre-line; }
-  </style>
-</head>
-<body>
-
-<h1>GAMES PLANET</h1>
-<h2>Manual Order Page – Fill your details</h2>
-
-<input type="text" id="name" placeholder="Name" required>
-<input type="text" id="mobile" placeholder="Mobile" required>
-<input type="text" id="altmobile" placeholder="Alt Mobile">
-<input type="email" id="email" placeholder="Email">
-<textarea id="address" placeholder="Address"></textarea>
-<input type="text" id="landmark" placeholder="Landmark">
-<input type="text" id="pincode" placeholder="Pincode">
-
-<div id="deliveryEstimate"></div>
-
-<input type="text" id="state" placeholder="State" readonly>
-<input type="text" id="city" placeholder="District/City" readonly>
-
-<select id="postoffice" required>
-  <option value="">Select Post Office</option>
-</select>
-
-<input type="text" id="product" placeholder="Product">
-<input type="text" id="variant" placeholder="Variant">
-<input type="number" id="baseprice" placeholder="Base Price">
-<input type="text" id="discount" placeholder="Discount Applied">
-<input type="number" id="amountpaid" placeholder="Amount Paid">
-
-<button class="pay-btn" onclick="payNow()">Pay Now</button>
-<button class="order-btn" onclick="sendOrder()">Submit Order Now</button>
-
-<img src="https://gamesplanet13.github.io/Ordernow/qr.jpg" alt="Paytm QR" id="qr-image"/>
-
 <script>
 let pincodeLatLng = {};
 let globalDistance = "N/A";
 let globalETA = "N/A";
-let globalEstimatedDate = "N/A";
+let globalEstimatedDateRange = "N/A";
 
-fetch('pincode_data.json')
+fetch('cities.json')
   .then(res => res.json())
   .then(data => { pincodeLatLng = data; })
   .catch(err => console.log("Failed to load cities.json", err));
@@ -75,25 +20,19 @@ function haversine(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-function estimateDeliveryByDistance(distance) {
-  if (distance <= 30) return "1 day";
-  else if (distance <= 60) return "1-2 days";
-  else if (distance <= 100) return "2-3 days";
-  else if (distance <= 200) return "3-4 days";
-  else if (distance <= 500) return "4-5 days";
-  else if (distance <= 1000) return "4-6 days";
-  else if (distance <= 1500) return "5–7 days";
-  else if (distance <= 2000) return "6–8 days";
-  else if (distance <= 3000) return "6–10 days";
-  else return "8–12 days (sometimes up to 15 days)";
+function formatDatePlusDays(days) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  const options = { day: 'numeric', month: 'long' };
+  return date.toLocaleDateString('en-IN', options);
 }
 
-function calculateEstimatedDate(etaText) {
+function calculateEstimatedRange(etaText) {
   const numbers = etaText.match(/\d+/g);
-  const maxDays = numbers ? Math.max(...numbers.map(Number)) : 7;
-  const estimated = new Date();
-  estimated.setDate(estimated.getDate() + maxDays);
-  return estimated.toDateString();
+  if (!numbers) return "N/A";
+  const minDay = parseInt(numbers[0]);
+  const maxDay = numbers[1] ? parseInt(numbers[1]) : minDay;
+  return `${formatDatePlusDays(minDay)} – ${formatDatePlusDays(maxDay)}`;
 }
 
 document.getElementById("pincode").addEventListener("input", function(){
@@ -121,18 +60,18 @@ document.getElementById("pincode").addEventListener("input", function(){
             const dest = pincodeLatLng[pincode];
             const distance = haversine(rampurLat, rampurLng, dest.lat, dest.lng).toFixed(0);
             const eta = estimateDeliveryByDistance(distance);
-            const deliveryDate = calculateEstimatedDate(eta);
+            const range = calculateEstimatedRange(eta);
 
             globalDistance = `${distance} km`;
             globalETA = eta;
-            globalEstimatedDate = deliveryDate;
+            globalEstimatedDateRange = range;
 
             document.getElementById("deliveryEstimate").innerText =
-              `📍 Pincode found – Distance: ${globalDistance}\n⏳ ETA: ${globalETA}\n📅 Estimated Delivery Date: ${globalEstimatedDate}`;
+              `📍 Pincode found – Distance: ${globalDistance}\n⏳ ETA: ${globalETA}\n📅 Estimated Delivery Date: ${globalEstimatedDateRange}\n📦 Delivery timeline is based on past experience. Sometimes it may delay by 1–3 days due to unavoidable circumstances.`;
           } else {
             globalDistance = "N/A";
             globalETA = "N/A";
-            globalEstimatedDate = "N/A";
+            globalEstimatedDateRange = "N/A";
             document.getElementById("deliveryEstimate").innerText = "📍 Pincode found, but no distance data.";
           }
         }
@@ -178,11 +117,9 @@ function sendOrder(){
 
 📏 Distance: ${globalDistance}
 ⏳ ETA: ${globalETA}
-📅 Estimated Delivery Date: ${globalEstimatedDate}`;
+📅 Estimated Delivery Date: ${globalEstimatedDateRange}
+📦 Delivery timeline is based on past experience. Sometimes it may delay by 1–3 days due to unavoidable circumstances.`;
 
   window.location.href = `https://wa.me/917983624797?text=${encodeURIComponent(msg)}`;
 }
 </script>
-
-</body>
-</html>
