@@ -2,47 +2,63 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>GamesPlanet Final Order Converter (Full Product + Variant List)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Games Planet Order Form – ETA Final</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    textarea { width: 100%; height: 250px; font-size: 14px; }
-    pre { background: #f0f0f0; padding: 10px; white-space: pre-wrap; font-size: 14px; }
-    button { padding: 10px 15px; font-size: 14px; margin: 4px; cursor: pointer; }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    input, select, textarea {
+      width: 90%; max-width: 400px; margin: 5px auto; padding: 10px;
+      font-size: 16px; display: block; border-radius: 5px; border: 1px solid #ccc;
+    }
+    button {
+      padding: 15px 25px; font-size: 18px; margin: 10px;
+      border: none; border-radius: 5px; cursor: pointer;
+    }
+    .pay-btn { background-color: #00b9f5; color: white; }
+    .order-btn { background-color: #28a745; color: white; }
+    img { width: 250px; margin: 20px 0; }
+    #deliveryEstimate { font-size: 16px; color: green; margin-top: 10px; white-space: pre-line; }
   </style>
 </head>
 <body>
 
-<h2>GamesPlanet Final Order Converter (Full Product + Variant List)</h2>
+<h1>GAMES PLANET</h1>
+<h2>Manual Order Page – Fill your details</h2>
 
-<textarea id="input" placeholder="Paste order details here"></textarea><br><br>
+<input type="text" id="name" placeholder="Name" required>
+<input type="text" id="mobile" placeholder="Mobile" required>
+<input type="text" id="altmobile" placeholder="Alt Mobile">
+<input type="email" id="email" placeholder="Email">
+<textarea id="address" placeholder="Address"></textarea>
+<input type="text" id="landmark" placeholder="Landmark">
+<input type="text" id="pincode" placeholder="Pincode">
 
-<button onclick="selectAll()">Select All</button>
-<button onclick="clearText()">Clear</button>
-<button onclick="convert()">Convert</button>
-<button onclick="copyAll()">Copy All</button>
-<button onclick="sendToCustomer()">Send to Customer WhatsApp</button>
-<button onclick="sendToOwn()">Send to Own WhatsApp</button>
-<button onclick="sendThanks()">Send Thanks</button>
-<button onclick="sendAbandonedCart()">Send Abandoned Cart WhatsApp</button>
+<div id="deliveryEstimate"></div>
 
-<pre id="output"></pre>
+<input type="text" id="state" placeholder="State" readonly>
+<input type="text" id="city" placeholder="District/City" readonly>
+
+<select id="postoffice" required>
+  <option value="">Select Post Office</option>
+</select>
+
+<input type="text" id="product" placeholder="Product">
+<input type="text" id="variant" placeholder="Variant">
+<input type="number" id="baseprice" placeholder="Base Price">
+<input type="text" id="discount" placeholder="Discount Applied">
+<input type="number" id="amountpaid" placeholder="Amount Paid">
+
+<button class="pay-btn" onclick="payNow()">Pay Now</button>
+<button class="order-btn" onclick="sendOrder()">Submit Order Now</button>
+
+<img src="https://gamesplanet13.github.io/Ordernow/qr.jpg" alt="Paytm QR" id="qr-image"/>
 
 <script>
-// Load pincode data
 let pincodeLatLng = {};
 fetch('cities.json')
-  .then(response => response.json())
+  .then(res => res.json())
   .then(data => { pincodeLatLng = data; })
-  .catch(error => console.log("Error loading pincode data:", error));
-
-function selectAll() {
-  let input = document.getElementById("input");
-  input.focus(); input.select();
-}
-function clearText() {
-  document.getElementById("input").value = "";
-  document.getElementById("output").textContent = "";
-}
+  .catch(err => console.log("Failed to load cities.json", err));
 
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -73,98 +89,98 @@ function getEstDate(days) {
   return d.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
 }
 
-function convert() {
-  let input = document.getElementById("input").value.toLowerCase();
+document.getElementById("pincode").addEventListener("input", function(){
+  let pincode = this.value;
+  if (pincode.length === 6) {
+    fetch(`https://api.postalpincode.in/pincode/${pincode}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data[0].Status === "Success") {
+        let po = data[0].PostOffice[0];
+        document.getElementById("state").value = po.State;
+        document.getElementById("city").value = po.District;
 
-  let orderId = input.match(/#\d{5,}/)?.[0] || "Not found";
-  let name = input.match(/name\s*\n([^\n]+)/i)?.[1]?.trim() || "Customer";
-  let mobile = input.match(/mobile\s*\n([^\n]+)/i)?.[1]?.trim() || "";
-  let altMobile = input.match(/alternate mobile number\s*\n([^\n]+)/i)?.[1]?.trim() || "";
-  let email = input.match(/email\s*\n([^\n]+)/i)?.[1]?.trim() || "";
-  let address = input.match(/shipping address\s*\n([^\n]+)/i)?.[1]?.trim() || "";
-  let pincode = input.match(/\b\d{6}\b/)?.[0] || "";
-  let basePrice = input.match(/1x\s*₹([\d,]+)/i)?.[1]?.replace(/,/g,"") || "0";
+        let sel = document.getElementById("postoffice");
+        sel.innerHTML = '<option value="">Select Post Office</option>';
+        data[0].PostOffice.forEach(p => {
+          let opt = document.createElement("option");
+          opt.value = p.Name;
+          opt.text = p.Name;
+          sel.appendChild(opt);
+        });
 
-  let discount = "0";
-  if (input.includes("coupon discount")) {
-    let d = input.match(/coupon discount[^\n]*\n-₹(\d+)/i);
-    discount = d ? d[1] : "0";
+        if (pincodeLatLng[pincode]) {
+          const dest = pincodeLatLng[pincode];
+          const distance = Math.round(haversine(28.8, 79.0, dest.lat, dest.lng));
+          const eta = estimateDeliveryByDistance(distance);
+          let days = 0;
+          if (eta.includes("–")) {
+            days = parseInt(eta.split("–")[1].replace(/\D/g, ""));
+          } else {
+            days = parseInt(eta.replace(/\D/g, ""));
+          }
+          const estDate = getEstDate(days);
+
+          const finalText = `📏 Distance: ${distance} km\n⏳ ETA: ${eta}\n📅 Estimated Delivery Date: ${estDate}`;
+
+          const de = document.getElementById("deliveryEstimate");
+          de.innerText = finalText;
+          de.dataset.final = finalText;
+          de.dataset.distance = distance;
+          de.dataset.eta = eta;
+          de.dataset.estdate = estDate;
+        } else {
+          document.getElementById("deliveryEstimate").innerText = "📍 Pincode found, but no distance data.";
+        }
+      }
+    });
   }
+});
 
-  let amountPaid = input.match(/Total\s*PAID\s*₹([\d,]+)/i)?.[1]?.replace(/,/g,"") || "0";
-
-  // Product detection
-  const products = ["aoko game stick", "gamestick pro", "ps2 slim", "ps3 slim", "ps4 slim", "xbox 360"];
-  products.sort((a,b) => b.length - a.length);
-  let detectedProduct = "Unknown Product";
-  for (let p of products) {
-    if (input.includes(p.toLowerCase())) {
-      detectedProduct = p.toUpperCase();
-      break;
-    }
+function payNow() {
+  const amount = document.getElementById("amountpaid").value;
+  if (amount) {
+    window.open(`upi://pay?pa=gamesplanet@upi&pn=GamesPlanet&am=${amount}`, "_blank");
+  } else {
+    alert("Please enter the amount first.");
   }
+}
 
-  // Variant detection
-  let variant = "";
-  let variantMatch = input.match(/(?:size|storage|variant|verient)[:\s]*([^\n]+)/i);
-  variant = variantMatch ? variantMatch[1].trim().toUpperCase() : "";
+function sendOrder(){
+  let now = new Date();
+  let orderId = String(now.getDate()).padStart(2,'0') + String(now.getMonth()+1).padStart(2,'0') + now.getFullYear() +
+                String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0') + '00';
 
-  let city = "Unknown", state = "Unknown", distance = "N/A", eta = "N/A", estdate = "N/A";
-  if (pincode in pincodeLatLng) {
-    let dest = pincodeLatLng[pincode];
-    city = dest.city;
-    state = dest.state;
-    distance = haversine(28.8, 79.0, dest.lat, dest.lng).toFixed(0);
-    eta = estimateDeliveryByDistance(distance);
-    let days = 0;
-    if (eta.includes("–")) {
-      days = parseInt(eta.split("–")[1].replace(/\D/g, ""));
-    } else {
-      days = parseInt(eta.replace(/\D/g, ""));
-    }
-    estdate = getEstDate(days);
-  }
+  const getValue = (id) => document.getElementById(id)?.value || "";
+  let eta = document.getElementById("deliveryEstimate").dataset.eta || "";
+  let distance = document.getElementById("deliveryEstimate").dataset.distance || "";
+  let estdate = document.getElementById("deliveryEstimate").dataset.estdate || "";
 
-  let outputText = 
-`🟢 Prepaid Order on Dukaan
+  let msg = `🟢 *Prepaid Order on WhatsApp*
 
-Order ID: ${orderId}
-Name: ${name}
-Mobile: ${mobile}
-Alt Mobile: ${altMobile}
-Email: ${email}
+*Order ID:* ${orderId}
+*Name:* ${getValue("name")}
+*Mobile:* ${getValue("mobile")}
+*Alt Mobile:* ${getValue("altmobile")}
+*Email:* ${getValue("email")}
+*Address:* ${getValue("address")}
+*Landmark:* ${getValue("landmark")}
+*Pincode:* ${getValue("pincode")}
+*State:* ${getValue("state")}
+*District/City:* ${getValue("city")}
+*Post office:* ${getValue("postoffice")}
 
-Address: ${address}
-Pincode: ${pincode}
-State: ${state}
-District/City: ${city}
+*Product:* ${getValue("product")}
+*Variant:* ${getValue("variant")}
+*Base Price:* ₹${getValue("baseprice")}
+*Discount Applied:* ₹${getValue("discount")}
+*Amount Paid:* ₹${getValue("amountpaid")}
 
-Product: ${detectedProduct}
-Variant: ${variant}
-Base Price: ₹${basePrice}
-Discount Applied: ₹${discount}
-Amount Paid: ₹${amountPaid}
-Distance: ${distance} km
-Estimated Delivery: ${eta}
+📏 Distance: ${distance} km
+⏳ ETA: ${eta}
 📅 Estimated Delivery Date: ${estdate}`;
 
-  document.getElementById("output").textContent = outputText;
-}
-
-function copyAll() {
-  navigator.clipboard.writeText(document.getElementById("output").textContent)
-    .then(() => alert("Output copied to clipboard!"));
-}
-
-function sendToCustomer() {
-  let mobile = document.getElementById("input").value.match(/\+91[-\s]?[0-9]{10}/)?.[0]?.replace(/\s|-/g,"") || "";
-  let msg = encodeURIComponent(document.getElementById("output").textContent);
-  if (mobile) window.open(`https://wa.me/${mobile}?text=${msg}`, "_blank");
-  else alert("Customer mobile number not found in input.");
-}
-function sendToOwn() {
-  let msg = encodeURIComponent(document.getElementById("output").textContent);
-  window.open(`https://wa.me/917983624797?text=${msg}`, "_blank");
+  window.location.href = `https://wa.me/917983624797?text=${encodeURIComponent(msg)}`;
 }
 </script>
 
