@@ -55,6 +55,10 @@
 
 <script>
 let pincodeLatLng = {};
+let globalDistance = "N/A";
+let globalETA = "N/A";
+let globalEstimatedDate = "N/A";
+
 fetch('cities.json')
   .then(res => res.json())
   .then(data => { pincodeLatLng = data; })
@@ -64,8 +68,9 @@ function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 +
-            Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -83,57 +88,55 @@ function estimateDeliveryByDistance(distance) {
   else return "8–12 days (sometimes up to 15 days)";
 }
 
-function getEstDate(days) {
-  let d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+function calculateEstimatedDate(etaText) {
+  const numbers = etaText.match(/\d+/g);
+  const maxDays = numbers ? Math.max(...numbers.map(Number)) : 7;
+  const estimated = new Date();
+  estimated.setDate(estimated.getDate() + maxDays);
+  return estimated.toDateString();
 }
 
 document.getElementById("pincode").addEventListener("input", function(){
-  let pincode = this.value;
+  let pincode = this.value.trim();
   if (pincode.length === 6) {
     fetch(`https://api.postalpincode.in/pincode/${pincode}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data[0].Status === "Success") {
-        let po = data[0].PostOffice[0];
-        document.getElementById("state").value = po.State;
-        document.getElementById("city").value = po.District;
+      .then(res => res.json())
+      .then(data => {
+        if (data[0].Status === "Success") {
+          let po = data[0].PostOffice[0];
+          document.getElementById("state").value = po.State;
+          document.getElementById("city").value = po.District;
 
-        let sel = document.getElementById("postoffice");
-        sel.innerHTML = '<option value="">Select Post Office</option>';
-        data[0].PostOffice.forEach(p => {
-          let opt = document.createElement("option");
-          opt.value = p.Name;
-          opt.text = p.Name;
-          sel.appendChild(opt);
-        });
+          let sel = document.getElementById("postoffice");
+          sel.innerHTML = '<option value="">Select Post Office</option>';
+          data[0].PostOffice.forEach(p => {
+            let opt = document.createElement("option");
+            opt.value = p.Name;
+            opt.text = p.Name;
+            sel.appendChild(opt);
+          });
 
-        if (pincodeLatLng[pincode]) {
-          const dest = pincodeLatLng[pincode];
-          const distance = Math.round(haversine(28.8, 79.0, dest.lat, dest.lng));
-          const eta = estimateDeliveryByDistance(distance);
-          let days = 0;
-          if (eta.includes("–")) {
-            days = parseInt(eta.split("–")[1].replace(/\D/g, ""));
+          if (pincodeLatLng[pincode]) {
+            const rampurLat = 28.8, rampurLng = 79.0;
+            const dest = pincodeLatLng[pincode];
+            const distance = haversine(rampurLat, rampurLng, dest.lat, dest.lng).toFixed(0);
+            const eta = estimateDeliveryByDistance(distance);
+            const deliveryDate = calculateEstimatedDate(eta);
+
+            globalDistance = `${distance} km`;
+            globalETA = eta;
+            globalEstimatedDate = deliveryDate;
+
+            document.getElementById("deliveryEstimate").innerText =
+              `📍 Pincode found – Distance: ${globalDistance}\n⏳ ETA: ${globalETA}\n📅 Estimated Delivery Date: ${globalEstimatedDate}`;
           } else {
-            days = parseInt(eta.replace(/\D/g, ""));
+            globalDistance = "N/A";
+            globalETA = "N/A";
+            globalEstimatedDate = "N/A";
+            document.getElementById("deliveryEstimate").innerText = "📍 Pincode found, but no distance data.";
           }
-          const estDate = getEstDate(days);
-
-          const finalText = `📏 Distance: ${distance} km\n⏳ ETA: ${eta}\n📅 Estimated Delivery Date: ${estDate}`;
-
-          const de = document.getElementById("deliveryEstimate");
-          de.innerText = finalText;
-          de.dataset.final = finalText;
-          de.dataset.distance = distance;
-          de.dataset.eta = eta;
-          de.dataset.estdate = estDate;
-        } else {
-          document.getElementById("deliveryEstimate").innerText = "📍 Pincode found, but no distance data.";
         }
-      }
-    });
+      });
   }
 });
 
@@ -152,9 +155,6 @@ function sendOrder(){
                 String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0') + '00';
 
   const getValue = (id) => document.getElementById(id)?.value || "";
-  let eta = document.getElementById("deliveryEstimate").dataset.eta || "";
-  let distance = document.getElementById("deliveryEstimate").dataset.distance || "";
-  let estdate = document.getElementById("deliveryEstimate").dataset.estdate || "";
 
   let msg = `🟢 *Prepaid Order on WhatsApp*
 
@@ -176,9 +176,9 @@ function sendOrder(){
 *Discount Applied:* ₹${getValue("discount")}
 *Amount Paid:* ₹${getValue("amountpaid")}
 
-📏 Distance: ${distance} km
-⏳ ETA: ${eta}
-📅 Estimated Delivery Date: ${estdate}`;
+📏 Distance: ${globalDistance}
+⏳ ETA: ${globalETA}
+📅 Estimated Delivery Date: ${globalEstimatedDate}`;
 
   window.location.href = `https://wa.me/917983624797?text=${encodeURIComponent(msg)}`;
 }
