@@ -69,17 +69,17 @@ function haversine(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-function estimateDays(distance) {
-  if (distance <= 30) return 1;
-  else if (distance <= 60) return 2;
-  else if (distance <= 100) return 3;
-  else if (distance <= 200) return 4;
-  else if (distance <= 500) return 5;
-  else if (distance <= 1000) return 6;
-  else if (distance <= 1500) return 7;
-  else if (distance <= 2000) return 8;
-  else if (distance <= 3000) return 10;
-  else return 12;
+function estimateDeliveryByDistance(distance) {
+  if (distance <= 30) return "1 day";
+  else if (distance <= 60) return "1-2 days";
+  else if (distance <= 100) return "2-3 days";
+  else if (distance <= 200) return "3-4 days";
+  else if (distance <= 500) return "4-5 days";
+  else if (distance <= 1000) return "4-6 days";
+  else if (distance <= 1500) return "5–7 days";
+  else if (distance <= 2000) return "6–8 days";
+  else if (distance <= 3000) return "6–10 days";
+  else return "8–12 days (sometimes up to 15 days)";
 }
 
 function getEstDate(days) {
@@ -111,16 +111,22 @@ document.getElementById("pincode").addEventListener("input", function(){
         if (pincodeLatLng[pincode]) {
           const dest = pincodeLatLng[pincode];
           const distance = Math.round(haversine(28.8, 79.0, dest.lat, dest.lng));
-          const eta = estimateDays(distance);
-          const etaText = `${eta} day${eta > 1 ? "s" : ""}`;
-          const estDate = getEstDate(eta);
+          const eta = estimateDeliveryByDistance(distance);
+          let days = 0;
+          if (eta.includes("–")) {
+            days = parseInt(eta.split("–")[1].replace(/\D/g, ""));
+          } else {
+            days = parseInt(eta.replace(/\D/g, ""));
+          }
+          const estDate = getEstDate(days);
 
-          const finalText = `📏 Distance: ${distance} km\n⏳ ETA: ${etaText}\n📅 Estimated Delivery: ${estDate}`;
+          const finalText = `📏 Distance: ${distance} km\n⏳ ETA: ${eta}\n🗓 Estimated Delivery Date: ${estDate}`;
+
           const de = document.getElementById("deliveryEstimate");
           de.innerText = finalText;
           de.dataset.final = finalText;
           de.dataset.distance = distance;
-          de.dataset.eta = etaText;
+          de.dataset.eta = eta;
           de.dataset.estdate = estDate;
         } else {
           document.getElementById("deliveryEstimate").innerText = "📍 Pincode found, but no distance data.";
@@ -147,6 +153,10 @@ function sendOrder(){
   const getValue = (id) => document.getElementById(id)?.value || "";
   let delivery = document.getElementById("deliveryEstimate").dataset.final || "";
 
+  let eta = document.getElementById("deliveryEstimate").dataset.eta || "";
+  let distance = document.getElementById("deliveryEstimate").dataset.distance || "";
+  let estdate = document.getElementById("deliveryEstimate").dataset.estdate || "";
+
   let msg = `🟢 *Prepaid Order on WhatsApp*
 
 *Order ID:* ${orderId}
@@ -167,7 +177,9 @@ function sendOrder(){
 *Discount Applied:* ₹${getValue("discount")}
 *Amount Paid:* ₹${getValue("amountpaid")}
 
-${delivery}`; // Final ETA section at bottom
+📏 Distance: ${distance} km
+⏳ ETA: ${eta}
+📅 Estimated Delivery Date: ${estdate}`;
 
   window.location.href = `https://wa.me/917983624797?text=${encodeURIComponent(msg)}`;
 }
