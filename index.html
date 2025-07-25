@@ -70,17 +70,17 @@ function haversine(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-function estimateDays(dist) {
-  if (dist <= 30) return 1;
-  if (dist <= 60) return 2;
-  if (dist <= 100) return 3;
-  if (dist <= 200) return 4;
-  if (dist <= 500) return 5;
-  if (dist <= 1000) return 6;
-  if (dist <= 1500) return 7;
-  if (dist <= 2000) return 8;
-  if (dist <= 3000) return 10;
-  return 12;
+function estimateDeliveryByDistance(distance) {
+  if (distance <= 30) return "1 day";
+  else if (distance <= 60) return "1-2 days";
+  else if (distance <= 100) return "2-3 days";
+  else if (distance <= 200) return "3-4 days";
+  else if (distance <= 500) return "4-5 days";
+  else if (distance <= 1000) return "4-6 days";
+  else if (distance <= 1500) return "5–7 days";
+  else if (distance <= 2000) return "6–8 days";
+  else if (distance <= 3000) return "6–10 days";
+  else return "8–12 days (sometimes up to 15 days)";
 }
 
 function getEstDate(days) {
@@ -165,6 +165,9 @@ function sendOrder(){
 *Base Price:* ₹${getValue("baseprice")}
 *Discount Applied:* ₹${getValue("discount")}
 *Amount Paid:* ₹${getValue("amountpaid")}
+*Distance: ${distance} km
+*Estimated Delivery: ${eta("ESTIMATED DAYS")}`;
+
 
 ${delivery}`;  // 👈 AT THE VERY BOTTOM ONLY
 
