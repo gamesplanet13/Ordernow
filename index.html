@@ -59,7 +59,7 @@ let globalDistance = "N/A";
 let globalETA = "N/A";
 let globalEstimatedDate = "N/A";
 
-fetch('cities.json')
+fetch('pincode_data.json')
   .then(res => res.json())
   .then(data => { pincodeLatLng = data; })
   .catch(err => console.log("Failed to load cities.json", err));
