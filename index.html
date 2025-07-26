@@ -49,11 +49,11 @@
   <option value="prepaid">Prepaid</option>
   <option value="cod">Cash on Delivery</option>
 </select>
+
 <input type="text" id="discount" placeholder="Discount Applied" readonly>
 <input type="text" id="restamount" placeholder="Rest on Delivery (if COD)" readonly>
 
 <input type="number" id="baseprice" placeholder="Base Price">
-<input type="text" id="discount" placeholder="Discount Applied">
 <input type="number" id="amountpaid" placeholder="Amount Paid">
 
 <button class="pay-btn" onclick="payNow()">Pay Now</button>
@@ -98,10 +98,20 @@ function estimateDeliveryByDistance(distance) {
 
 function calculateEstimatedDate(etaText) {
   const numbers = etaText.match(/\d+/g);
-  const maxDays = numbers ? Math.max(...numbers.map(Number)) : 7;
-  const estimated = new Date();
-  estimated.setDate(estimated.getDate() + maxDays);
-  return estimated.toDateString();
+  if (!numbers || numbers.length === 0) return "N/A";
+
+  const minDays = Math.min(...numbers.map(Number));
+  const maxDays = Math.max(...numbers.map(Number));
+
+  const start = new Date();
+  const end = new Date();
+  start.setDate(start.getDate() + minDays);
+  end.setDate(end.getDate() + maxDays);
+
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const formatDate = (d) => `${d.getDate()} ${months[d.getMonth()]}`;
+
+  return `${formatDate(start)} to ${formatDate(end)}`;
 }
 
 document.getElementById("pincode").addEventListener("input", function(){
@@ -136,7 +146,11 @@ document.getElementById("pincode").addEventListener("input", function(){
             globalEstimatedDate = deliveryDate;
 
             document.getElementById("deliveryEstimate").innerText =
-              `📍 Pincode found – Distance: ${globalDistance}\n⏳ ETA: ${globalETA}\n📅 Estimated Delivery Date: ${globalEstimatedDate}`;
+              `📍 Pincode found – Distance: ${globalDistance}
+⏳ ETA: ${globalETA}
+📅 Estimated Delivery: ${globalEstimatedDate}
+
+📝 Delivery timeline is based on past experience. Sometimes it may delay by 1–3 days due to unforeseen circumstances.`;
           } else {
             globalDistance = "N/A";
             globalETA = "N/A";
@@ -186,7 +200,7 @@ function sendOrder(){
 
 📏 Distance: ${globalDistance}
 ⏳ ETA: ${globalETA}
-📅 Estimated Delivery Date: ${globalEstimatedDate}`;
+📅 Estimated Delivery: ${globalEstimatedDate}`;
 
   window.location.href = `https://wa.me/917983624797?text=${encodeURIComponent(msg)}`;
 }
@@ -226,7 +240,6 @@ function updateDiscount() {
   document.getElementById("amountpaid").value = amountPaid;
   document.getElementById("restamount").value = rest;
 }
-
 </script>
 
 </body>
