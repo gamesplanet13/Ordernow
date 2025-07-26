@@ -49,11 +49,11 @@
   <option value="prepaid">Prepaid</option>
   <option value="cod">Cash on Delivery</option>
 </select>
-
 <input type="text" id="discount" placeholder="Discount Applied" readonly>
 <input type="text" id="restamount" placeholder="Rest on Delivery (if COD)" readonly>
 
 <input type="number" id="baseprice" placeholder="Base Price">
+<input type="text" id="discount" placeholder="Discount Applied">
 <input type="number" id="amountpaid" placeholder="Amount Paid">
 
 <button class="pay-btn" onclick="payNow()">Pay Now</button>
@@ -113,6 +113,12 @@ function calculateEstimatedDate(etaText) {
 
   return `${formatDate(start)} to ${formatDate(end)}`;
 }
+  const numbers = etaText.match(/\d+/g);
+  const maxDays = numbers ? Math.max(...numbers.map(Number)) : 7;
+  const estimated = new Date();
+  estimated.setDate(estimated.getDate() + maxDays);
+  return estimated.toDateString();
+}
 
 document.getElementById("pincode").addEventListener("input", function(){
   let pincode = this.value.trim();
@@ -139,23 +145,37 @@ document.getElementById("pincode").addEventListener("input", function(){
             const dest = pincodeLatLng[pincode];
             const distance = haversine(rampurLat, rampurLng, dest.lat, dest.lng).toFixed(0);
             const eta = estimateDeliveryByDistance(distance);
-            const deliveryDate = calculateEstimatedDate(eta);
+            
+const deliveryDate = calculateEstimatedDate(eta);
+if (document.getElementById("paymentmode").value === "cod") {
+  const numbers = eta.match(/\d+/g);
+  let extra = numbers ? Math.max(...numbers.map(Number)) + 2 : 2;
+  let codStart = new Date();
+  let codEnd = new Date();
+  codStart.setDate(codStart.getDate() + extra);
+  codEnd.setDate(codEnd.getDate() + extra + 1);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const formatDate = (d) => `${d.getDate()} ${months[d.getMonth()]}`;
+  globalEstimatedDate = `${formatDate(codStart)} to ${formatDate(codEnd)}`;
+} else {
+  globalEstimatedDate = deliveryDate;
+}
 
-            globalDistance = `${distance} km`;
-            globalETA = eta;
-            globalEstimatedDate = deliveryDate;
-
-            document.getElementById("deliveryEstimate").innerText =
-              `📍 Pincode found – Distance: ${globalDistance}
-⏳ ETA: ${globalETA}
-📅 Estimated Delivery: ${globalEstimatedDate}
-
-📝 Delivery timeline is based on past experience. Sometimes it may delay by 1–3 days due to unforeseen circumstances.`;
+document.getElementById("deliveryEstimate").innerText =
+              "📍 Pincode found – Distance: " + globalDistance + "\n" +
+"⏳ ETA: " + globalETA + "\n" +
+"📅 Estimated Delivery: " + globalEstimatedDate + "\n\n" +
+"📝 Delivery timeline is based on past experience. Sometimes it may delay by 1–3 days due to unforeseen circumstances.";
+              `📍 Pincode found – Distance: ${globalDistance}\n⏳ ETA: ${globalETA}\n📅 Estimated Delivery Date: ${globalEstimatedDate}`;
           } else {
             globalDistance = "N/A";
             globalETA = "N/A";
             globalEstimatedDate = "N/A";
-            document.getElementById("deliveryEstimate").innerText = "📍 Pincode found, but no distance data.";
+            document.getElementById("deliveryEstimate").innerText =
+              "📍 Pincode found – Distance: " + globalDistance + "\n" +
+"⏳ ETA: " + globalETA + "\n" +
+"📅 Estimated Delivery: " + globalEstimatedDate + "\n\n" +
+"📝 Delivery timeline is based on past experience. Sometimes it may delay by 1–3 days due to unforeseen circumstances."; "📍 Pincode found, but no distance data.";
           }
         }
       });
@@ -177,30 +197,55 @@ function sendOrder(){
                 String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0') + '00';
 
   const getValue = (id) => document.getElementById(id)?.value || "";
+  const mode = getValue("paymentmode");
+  const codCharge = (mode === "cod" && parseInt(getValue("baseprice")) < 1500) ? 99 : 0;
 
-  let msg = `🟢 *Prepaid Order on WhatsApp*
+  let msg = "";
+  if (mode === "prepaid") {
+    msg = `🟢 Prepaid Order on WhatsApp
 
-*Order ID:* ${orderId}
-*Name:* ${getValue("name")}
-*Mobile:* ${getValue("mobile")}
-*Alt Mobile:* ${getValue("altmobile")}
-*Email:* ${getValue("email")}
-*Address:* ${getValue("address")}
-*Landmark:* ${getValue("landmark")}
-*Pincode:* ${getValue("pincode")}
-*State:* ${getValue("state")}
-*District/City:* ${getValue("city")}
-*Post office:* ${getValue("postoffice")}
+Order ID: ${orderId}
+Name: ${getValue("name")}
+Mobile: ${getValue("mobile")}
+Alt Mobile: ${getValue("altmobile")}
+Email: ${getValue("email")}
+Address: ${getValue("address")}
+Landmark: ${getValue("landmark")}
+Pincode: ${getValue("pincode")}
+State: ${getValue("state")}
+District/City: ${getValue("city")}
+Post office: ${getValue("postoffice")}
 
-*Product:* ${getValue("product")}
-*Variant:* ${getValue("variant")}
-*Base Price:* ₹${getValue("baseprice")}
-*Discount Applied:* ₹${getValue("discount")}
-*Amount Paid:* ₹${getValue("amountpaid")}
+Product: ${getValue("product")}
+Variant: ${getValue("variant")}
+Base Price: ₹${getValue("baseprice")}
+Discount Applied: ₹${getValue("discount")}
+Amount Paid: ₹${getValue("amountpaid")}
 
 📏 Distance: ${globalDistance}
-⏳ ETA: ${globalETA}
+⏳ Prepaid Order ETA: ${globalETA}
 📅 Estimated Delivery: ${globalEstimatedDate}`;
+  } else {
+    msg = `🔴 COD Order on WhatsApp
+
+Name: ${getValue("name")}
+Mobile: ${getValue("mobile")}
+Alt Mobile: ${getValue("altmobile")}
+Email: ${getValue("email")}
+Address: ${getValue("address")}
+Landmark: ${getValue("landmark")}
+Pincode: ${getValue("pincode")}
+State: ${getValue("state")}
+District/City: ${getValue("city")}
+Post office: ${getValue("postoffice")}
+
+Product: ${getValue("product")}
+Variant: ${getValue("variant")}
+Base Price: ₹${getValue("baseprice")}
+Amount Paid (Advance): ₹${getValue("amountpaid")}
+COD Charges: ₹${codCharge}
+Rest Amount on Delivery: ₹${getValue("restamount")}`;
+  }
 
   window.location.href = `https://wa.me/917983624797?text=${encodeURIComponent(msg)}`;
 }
@@ -240,6 +285,7 @@ function updateDiscount() {
   document.getElementById("amountpaid").value = amountPaid;
   document.getElementById("restamount").value = rest;
 }
+
 </script>
 
 </body>
