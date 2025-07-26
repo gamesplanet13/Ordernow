@@ -49,11 +49,11 @@
   <option value="prepaid">Prepaid</option>
   <option value="cod">Cash on Delivery</option>
 </select>
+
 <input type="text" id="discount" placeholder="Discount Applied" readonly>
 <input type="text" id="restamount" placeholder="Rest on Delivery (if COD)" readonly>
 
 <input type="number" id="baseprice" placeholder="Base Price">
-<input type="text" id="discount" placeholder="Discount Applied">
 <input type="number" id="amountpaid" placeholder="Amount Paid">
 
 <button class="pay-btn" onclick="payNow()">Pay Now</button>
@@ -113,12 +113,6 @@ function calculateEstimatedDate(etaText) {
 
   return `${formatDate(start)} to ${formatDate(end)}`;
 }
-  const numbers = etaText.match(/\d+/g);
-  const maxDays = numbers ? Math.max(...numbers.map(Number)) : 7;
-  const estimated = new Date();
-  estimated.setDate(estimated.getDate() + maxDays);
-  return estimated.toDateString();
-}
 
 document.getElementById("pincode").addEventListener("input", function(){
   let pincode = this.value.trim();
@@ -145,37 +139,23 @@ document.getElementById("pincode").addEventListener("input", function(){
             const dest = pincodeLatLng[pincode];
             const distance = haversine(rampurLat, rampurLng, dest.lat, dest.lng).toFixed(0);
             const eta = estimateDeliveryByDistance(distance);
-            
-const deliveryDate = calculateEstimatedDate(eta);
-if (document.getElementById("paymentmode").value === "cod") {
-  const numbers = eta.match(/\d+/g);
-  let extra = numbers ? Math.max(...numbers.map(Number)) + 2 : 2;
-  let codStart = new Date();
-  let codEnd = new Date();
-  codStart.setDate(codStart.getDate() + extra);
-  codEnd.setDate(codEnd.getDate() + extra + 1);
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const formatDate = (d) => `${d.getDate()} ${months[d.getMonth()]}`;
-  globalEstimatedDate = `${formatDate(codStart)} to ${formatDate(codEnd)}`;
-} else {
-  globalEstimatedDate = deliveryDate;
-}
+            const deliveryDate = calculateEstimatedDate(eta);
 
-document.getElementById("deliveryEstimate").innerText =
-              "📍 Pincode found – Distance: " + globalDistance + "\n" +
-"⏳ ETA: " + globalETA + "\n" +
-"📅 Estimated Delivery: " + globalEstimatedDate + "\n\n" +
-"📝 Delivery timeline is based on past experience. Sometimes it may delay by 1–3 days due to unforeseen circumstances.";
-              `📍 Pincode found – Distance: ${globalDistance}\n⏳ ETA: ${globalETA}\n📅 Estimated Delivery Date: ${globalEstimatedDate}`;
+            globalDistance = `${distance} km`;
+            globalETA = eta;
+            globalEstimatedDate = deliveryDate;
+
+            document.getElementById("deliveryEstimate").innerText =
+              `📍 Pincode found – Distance: ${globalDistance}
+⏳ ETA: ${globalETA}
+📅 Estimated Delivery: ${globalEstimatedDate}
+
+📝 Delivery timeline is based on past experience. Sometimes it may delay by 1–3 days due to unforeseen circumstances.`;
           } else {
             globalDistance = "N/A";
             globalETA = "N/A";
             globalEstimatedDate = "N/A";
-            document.getElementById("deliveryEstimate").innerText =
-              "📍 Pincode found – Distance: " + globalDistance + "\n" +
-"⏳ ETA: " + globalETA + "\n" +
-"📅 Estimated Delivery: " + globalEstimatedDate + "\n\n" +
-"📝 Delivery timeline is based on past experience. Sometimes it may delay by 1–3 days due to unforeseen circumstances."; "📍 Pincode found, but no distance data.";
+            document.getElementById("deliveryEstimate").innerText = "📍 Pincode found, but no distance data.";
           }
         }
       });
@@ -198,59 +178,73 @@ function sendOrder(){
 
   const getValue = (id) => document.getElementById(id)?.value || "";
   const mode = getValue("paymentmode");
-  const codCharge = (mode === "cod" && parseInt(getValue("baseprice")) < 1500) ? 99 : 0;
+
+  // ETA & Date for COD (+2 to 3 days)
+  let eta = globalETA;
+  let delivery = globalEstimatedDate;
+  if (mode === "cod" && globalETA.match(/\d/)) {
+    const nums = globalETA.match(/\d+/g).map(Number);
+    const newMin = nums[0] + 2;
+    const newMax = (nums[1] || nums[0]) + 3;
+    eta = `${newMin}–${newMax} days`;
+    delivery = calculateEstimatedDate(eta);
+  }
 
   let msg = "";
   if (mode === "prepaid") {
-    msg = `🟢 Prepaid Order on WhatsApp
+    msg = `🟢 *Prepaid Order on WhatsApp*
 
-Order ID: ${orderId}
-Name: ${getValue("name")}
-Mobile: ${getValue("mobile")}
-Alt Mobile: ${getValue("altmobile")}
-Email: ${getValue("email")}
-Address: ${getValue("address")}
-Landmark: ${getValue("landmark")}
-Pincode: ${getValue("pincode")}
-State: ${getValue("state")}
-District/City: ${getValue("city")}
-Post office: ${getValue("postoffice")}
+*Order ID:* ${orderId}
+*Name:* ${getValue("name")}
+*Mobile:* ${getValue("mobile")}
+*Alt Mobile:* ${getValue("altmobile")}
+*Email:* ${getValue("email")}
+*Address:* ${getValue("address")}
+*Landmark:* ${getValue("landmark")}
+*Pincode:* ${getValue("pincode")}
+*State:* ${getValue("state")}
+*District/City:* ${getValue("city")}
+*Post office:* ${getValue("postoffice")}
 
-Product: ${getValue("product")}
-Variant: ${getValue("variant")}
-Base Price: ₹${getValue("baseprice")}
-Discount Applied: ₹${getValue("discount")}
-Amount Paid: ₹${getValue("amountpaid")}
+*Product:* ${getValue("product")}
+*Variant:* ${getValue("variant")}
+*Base Price:* ₹${getValue("baseprice")}
+*Discount Applied:* ₹${getValue("discount")}
+*Amount Paid:* ₹${getValue("amountpaid")}
 
 📏 Distance: ${globalDistance}
-⏳ Prepaid Order ETA: ${globalETA}
-📅 Estimated Delivery: ${globalEstimatedDate}`;
+⏳ Prepaid Order ETA: ${eta}
+📅 Estimated Delivery: ${delivery}`;
   } else {
-    msg = `🔴 COD Order on WhatsApp
+    msg = `🔴 *COD Order on WhatsApp*
 
-Name: ${getValue("name")}
-Mobile: ${getValue("mobile")}
-Alt Mobile: ${getValue("altmobile")}
-Email: ${getValue("email")}
-Address: ${getValue("address")}
-Landmark: ${getValue("landmark")}
-Pincode: ${getValue("pincode")}
-State: ${getValue("state")}
-District/City: ${getValue("city")}
-Post office: ${getValue("postoffice")}
+*Name:* ${getValue("name")}
+*Mobile:* ${getValue("mobile")}
+*Alt Mobile:* ${getValue("altmobile")}
+*Email:* ${getValue("email")}
+*Address:* ${getValue("address")}
+*Landmark:* ${getValue("landmark")}
+*Pincode:* ${getValue("pincode")}
+*State:* ${getValue("state")}
+*District/City:* ${getValue("city")}
+*Post office:* ${getValue("postoffice")}
 
-Product: ${getValue("product")}
-Variant: ${getValue("variant")}
-Base Price: ₹${getValue("baseprice")}
-Amount Paid (Advance): ₹${getValue("amountpaid")}
-COD Charges: ₹${codCharge}
-Rest Amount on Delivery: ₹${getValue("restamount")}`;
+*Product:* ${getValue("product")}
+*Variant:* ${getValue("variant")}
+*Base Price:* ₹${getValue("baseprice")}
+*Amount Paid (Advance):* ₹${getValue("amountpaid")}
+*COD Charges:* ₹${(parseInt(getValue("baseprice")) < 1500 ? 99 : 0)}
+*Rest Amount on Delivery:* ₹${getValue("restamount")}
+
+📏 Distance: ${globalDistance}
+⏳ COD Order ETA: ${eta}
+📅 Estimated Delivery: ${delivery}`;
   }
 
   window.location.href = `https://wa.me/917983624797?text=${encodeURIComponent(msg)}`;
 }
 
-const products = ["super mini u box md 16bit sega","aoko game stick","aoko game stick v1","black hawk","black hawk v1","fmcb","fmcb + usb","fmcb + usb optional","fmcb + usb top","gamestick lite","gamestick pro","game stick gd10","gamestick blaster","game box g10","g10","g10v3","g11 pro","g11 pro special edition","g11 pro ultimate edition","gd10","gd30","gd35","gs5","k8","m15 pro","m22","m33","m44","m55","m66","m77","m88","m99","m222","m333","m444","m555","m666","m777","m888","m999","m1000","nintendo switch","nintendo switch oled","nintendo wii","nintendo wii u","nintendo ds","nintendo 3ds","ps1","ps2 slim","ps3 slim","ps3 super slim","ps4 fat","ps4 pro","ps4 slim","xbox 360","xbox one","xbox series s","xbox series x","pandora mini","pandora pro","sega mini u box","sega 16bit mini u box","sup x7m","r35s","r36s","usb","sd card"];
+const products = ["super mini u box md 16bit sega", "aoko game stick", "aoko game stick v1", "black hawk", "black hawk v1", "fmcb", "fmcb + usb", "fmcb + usb optional", "fmcb + usb top", "gamestick lite", "gamestick pro", "game stick gd10", "gamestick blaster", "game box g10", "g10", "g10v3", "g11 pro", "g11 pro special edition", "g11 pro ultimate edition", "gd10", "gd30", "gd35", "gs5", "k8", "m15 pro", "m22", "m33", "m44", "m55", "m66", "m77", "m88", "m99", "m222", "m333", "m444", "m555", "m666", "m777", "m888", "m999", "m1000", "nintendo switch", "nintendo switch oled", "nintendo wii", "nintendo wii u", "nintendo ds", "nintendo 3ds", "ps1", "ps2 slim", "ps3 slim", "ps3 super slim", "ps4 fat", "ps4 pro", "ps4 slim", "xbox 360", "xbox one", "xbox series s", "xbox series x", "pandora mini", "pandora pro", "sega mini u box", "sega 16bit mini u box", "sup x7m", "r35s", "r36s", "usb", "sd card"];
 
 document.getElementById("coupon").addEventListener("input", updateDiscount);
 document.getElementById("variant").addEventListener("input", updateDiscount);
@@ -285,7 +279,6 @@ function updateDiscount() {
   document.getElementById("amountpaid").value = amountPaid;
   document.getElementById("restamount").value = rest;
 }
-
 </script>
 
 </body>
