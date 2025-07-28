@@ -192,49 +192,50 @@ function sendOrder(){
 
   let msg = "";
   if (mode === "prepaid") {
-    msg = `🟢 *Prepaid Order on WhatsApp*
+    msg = `🟢 Prepaid Order on WhatsApp
 
-*Order ID:* ${orderId}
-*Name:* ${getValue("name")}
-*Mobile:* ${getValue("mobile")}
-*Alt Mobile:* ${getValue("altmobile")}
-*Email:* ${getValue("email")}
-*Address:* ${getValue("address")}
-*Landmark:* ${getValue("landmark")}
-*Pincode:* ${getValue("pincode")}
-*State:* ${getValue("state")}
-*District/City:* ${getValue("city")}
-*Post office:* ${getValue("postoffice")}
+Order ID: ${orderId}
+Name: ${getValue("name")}
+Mobile: ${getValue("mobile")}
+Alt Mobile: ${getValue("altmobile")}
+Email: ${getValue("email")}
+Address: ${getValue("address")}
+Landmark: ${getValue("landmark")}
+Pincode: ${getValue("pincode")}
+State: ${getValue("state")}
+District/City: ${getValue("city")}
+Post office: ${getValue("postoffice")}
 
-*Product:* ${getValue("product")}
-*Variant:* ${getValue("variant")}
-*Base Price:* ₹${getValue("baseprice")}
-*Discount Applied:* ₹${getValue("discount")}
-*Amount Paid:* ₹${getValue("amountpaid")}
+Product: ${getValue("product")}
+Variant: ${getValue("variant")}
+Base Price: ₹${getValue("baseprice")}
+Discount Applied: ₹${getValue("discount")}
+Amount Paid: ₹${getValue("amountpaid")}
 
 📏 Distance: ${globalDistance}
 ⏳ Prepaid Order ETA: ${eta}
 📅 Estimated Delivery: ${delivery}`;
   } else {
-    msg = `🔴 *COD Order on WhatsApp*
+    msg = `🔴 COD Order on WhatsApp
 
-*Name:* ${getValue("name")}
-*Mobile:* ${getValue("mobile")}
-*Alt Mobile:* ${getValue("altmobile")}
-*Email:* ${getValue("email")}
-*Address:* ${getValue("address")}
-*Landmark:* ${getValue("landmark")}
-*Pincode:* ${getValue("pincode")}
-*State:* ${getValue("state")}
-*District/City:* ${getValue("city")}
-*Post office:* ${getValue("postoffice")}
+Order ID: ${orderId}
+Name: ${getValue("name")}
+Mobile: ${getValue("mobile")}
+Alt Mobile: ${getValue("altmobile")}
+Email: ${getValue("email")}
+Address: ${getValue("address")}
+Landmark: ${getValue("landmark")}
+Pincode: ${getValue("pincode")}
+State: ${getValue("state")}
+District/City: ${getValue("city")}
+Post office: ${getValue("postoffice")}
 
-*Product:* ${getValue("product")}
-*Variant:* ${getValue("variant")}
-*Base Price:* ₹${getValue("baseprice")}
-*Amount Paid (Advance):* ₹${getValue("amountpaid")}
-*COD Charges:* ₹${(parseInt(getValue("baseprice")) < 1500 ? 99 : 0)}
-*Rest Amount on Delivery:* ₹${getValue("restamount")}
+Product: ${getValue("product")}
+Variant: ${getValue("variant")}
+Base Price: ₹${getValue("baseprice")}
+Amount Paid: ₹${getValue("amountpaid")}
+COD Charges: ₹${(parseInt(getValue("baseprice")) < 1500 ? 99 : 0)}
+Rest Amount on Delivery: ₹${getValue("restamount")}
 
 📏 Distance: ${globalDistance}
 ⏳ COD Order ETA: ${eta}
