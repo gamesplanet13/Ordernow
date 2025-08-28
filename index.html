@@ -1,220 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Games Planet Order Form — v2.1</title>
+<title>Games Planet Order Form — v2.2</title>
 <style>
-  :root{
-    --bg:#0b1020; --card:#121a33; --muted:#9fb0d3; --text:#eaf1ff;
-    --accent2:#3ddc84; --warn:#ffd54f; --err:#ff6b6b; --ring:#3ddc8444;
-  }
-  *{box-sizing:border-box}
-  body{margin:0; font-family:system-ui, Arial, sans-serif; background:var(--bg); color:var(--text)}
-  header{padding:18px 16px; text-align:center}
-  h1{margin:0 0 6px}
-  h2{margin:0; font-weight:500; color:var(--muted)}
-  main{max-width:960px; margin:0 auto; padding:8px 16px 120px}
-  .grid{display:grid; gap:10px}
-  @media(min-width:800px){ .grid-2{grid-template-columns:1fr 1fr} .grid-3{grid-template-columns:1fr 1fr 1fr} }
-  .card{background:var(--card); border:1px solid #1e2751; border-radius:14px; padding:14px}
-  label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px}
-  input, select, textarea{
-    width:100%; padding:12px; border-radius:10px; border:1px solid #2a335a; background:#0f1530; color:var(--text); font-size:16px; outline:none;
-  }
-  input:focus, select:focus, textarea:focus{ box-shadow:0 0 0 3px var(--ring); border-color:#3ddc84 }
-  input[readonly]{opacity:.9}
-  .note{font-size:13px; color:var(--muted)}
-  .warn{color:var(--warn); font-weight:600}
-  .summary{font-family:ui-monospace, Menlo, Consolas, monospace; background:#0f1530; border-radius:10px; padding:10px; border:1px dashed #2a335a; white-space:pre-line}
-  .actions{position:fixed; left:0; right:0; bottom:0; background:linear-gradient(180deg, transparent, rgba(11,16,32,.9) 20%); padding:16px}
-  .actions-inner{max-width:960px; margin:0 auto; display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
-  button{padding:14px 22px; font-size:18px; border:none; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); cursor:pointer}
-  .btn-pay{background:#00b9f5; color:#fff}
-  .btn-send{background:#28a745; color:#fff}
-  .btn-send[disabled]{opacity:.5; cursor:not-allowed}
-  .line{height:1px; background:#1e2751; margin:8px 0}
-  .kvs{display:grid; grid-template-columns:1fr auto; gap:6px; font-size:14px}
-  .kvs b{justify-self:end}
-  .pill{display:inline-block; padding:4px 10px; border-radius:999px; background:#0f1530; border:1px solid #2a335a; font-size:12px; color:#c7d4ff}
-  .qr{width:220px; border-radius:12px; display:block; margin:8px auto 0}
+  body{margin:0;font-family:Arial, sans-serif;background:#0b1020;color:#eaf1ff;padding-bottom:120px}
+  header{text-align:center;padding:18px}
+  h1{margin:0 0 4px} h2{margin:0;font-weight:500;color:#9fb0d3}
+  main{max-width:900px;margin:auto;padding:10px}
+  .card{background:#121a33;border:1px solid #1e2751;border-radius:12px;padding:14px;margin:10px 0}
+  label{display:block;font-size:13px;color:#9fb0d3;margin-bottom:4px}
+  input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #2a335a;background:#0f1530;color:#eaf1ff;font-size:15px}
+  input[readonly]{opacity:.85}
+  .summary{font-family:monospace;background:#0f1530;border-radius:8px;padding:10px;border:1px dashed #2a335a;white-space:pre-line}
+  .actions{position:fixed;left:0;right:0;bottom:0;background:rgba(11,16,32,.95);padding:12px}
+  .actions-inner{max-width:900px;margin:auto;display:flex;gap:10px;justify-content:center}
+  button{padding:12px 18px;font-size:17px;border:none;border-radius:8px;cursor:pointer;box-shadow:0 5px 15px rgba(0,0,0,.3)}
+  .btn-pay{background:#00b9f5;color:#fff}
+  .btn-send{background:#28a745;color:#fff}
+  .btn-send[disabled]{opacity:.6;cursor:not-allowed}
 </style>
 </head>
 <body>
 <header>
   <h1>GAMES PLANET</h1>
-  <h2>Manual Order Page — Fill Your Details (v2.1)</h2>
+  <h2>Manual Order Page — v2.2</h2>
 </header>
 
-<main class="grid grid-2">
-
-  <!-- Customer -->
-  <section class="card">
+<main>
+  <div class="card">
     <h3>Customer Details</h3>
-    <div class="grid">
-      <div>
-        <label for="name">Name</label>
-        <input id="name" placeholder="Full name" autocomplete="name">
-      </div>
-      <div class="grid grid-2">
-        <div>
-          <label for="mobile">Mobile</label>
-          <input id="mobile" placeholder="10-digit mobile" inputmode="numeric" maxlength="10">
-        </div>
-        <div>
-          <label for="altmobile">Alt Mobile</label>
-          <input id="altmobile" placeholder="Optional" inputmode="numeric" maxlength="10">
-        </div>
-      </div>
-      <div>
-        <label for="email">Email</label>
-        <input id="email" type="email" placeholder="email@example.com" autocomplete="email">
-      </div>
-      <div>
-        <label for="address">Address</label>
-        <textarea id="address" placeholder="House no, Street, Area"></textarea>
-      </div>
-      <div class="grid grid-3">
-        <div>
-          <label for="landmark">Landmark</label>
-          <input id="landmark" placeholder="Near ...">
-        </div>
-        <div>
-          <label for="pincode">Pincode</label>
-          <input id="pincode" placeholder="6 digits" inputmode="numeric" maxlength="6">
-        </div>
-        <div>
-          <label>&nbsp;</label>
-          <div class="note">Pincode fetches ETA & Post Offices</div>
-        </div>
-      </div>
+    <label>Name</label><input id="name">
+    <label>Mobile</label><input id="mobile" maxlength="10">
+    <label>Alt Mobile</label><input id="altmobile" maxlength="10">
+    <label>Email</label><input id="email" type="email">
+    <label>Address</label><textarea id="address"></textarea>
+    <label>Landmark</label><input id="landmark">
+    <label>Pincode</label><input id="pincode" maxlength="6">
+    <div id="deliveryEstimate" class="summary"></div>
+    <label>State</label><input id="state" readonly>
+    <label>District/City</label><input id="city" readonly>
+    <label>Post Office</label>
+    <select id="postoffice"><option value="">Select</option></select>
+  </div>
 
-      <div id="deliveryEstimate" class="summary"></div>
-      <div id="dispatchNote" class="note"></div>
+  <div class="card">
+    <h3>Order Details</h3>
+    <label>Product</label><input id="product">
+    <label>Variant</label><input id="variant">
 
-      <div class="grid grid-3">
-        <div>
-          <label for="state">State</label>
-          <input id="state" placeholder="State" readonly>
-        </div>
-        <div>
-          <label for="city">District/City</label>
-          <input id="city" placeholder="District/City" readonly>
-        </div>
-        <div>
-          <label for="postoffice">Post Office</label>
-          <select id="postoffice">
-            <option value="">Select Post Office</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </section>
+    <label>Add-on Name</label><input id="addonName">
+    <label>Add-on Amount (₹)</label><input id="addonAmount" type="number" min="0">
 
-  <!-- Order -->
-  <section class="card">
-    <h3>Order & Pricing</h3>
+    <label>Courier</label>
+    <select id="courier"><option>Delhivery</option><option>DTDC</option><option>Speed Post</option></select>
 
-    <div class="grid">
-      <div class="grid grid-2">
-        <div>
-          <label for="product">Product</label>
-          <input id="product" list="products" placeholder="Type to search">
-          <datalist id="products">
-            <option>FMCB</option><option>FMCB + USB</option><option>FMCB + USB Optional</option><option>FMCB + USB Top</option>
-            <option>USB</option><option>SD Card</option><option>GD10</option><option>GD30</option><option>GD35</option>
-            <option>G10</option><option>G11 Pro</option><option>G11 Pro Special Edition</option><option>G11 Pro Ultimate Edition</option>
-            <option>M22</option><option>M33</option><option>M44</option><option>M55</option><option>M66</option><option>M77</option><option>M88</option>
-            <option>Pandora Mini</option><option>Pandora Pro</option><option>R35S</option><option>R36S</option>
-            <option>PS2 Slim</option><option>PS3 Slim</option><option>PS3 Super Slim</option><option>PS4 Fat</option><option>PS4 Slim</option><option>PS4 Pro</option>
-            <option>Super Mini U Box MD 16bit Sega</option><option>Sega 16bit Mini U Box</option><option>SUP X7M</option>
-          </datalist>
-        </div>
-        <div>
-          <label for="variant">Variant</label>
-          <input id="variant" placeholder="e.g., 64GB / 128GB / 256GB / 1TB">
-        </div>
-      </div>
+    <label>Payment Mode</label>
+    <select id="paymentmode">
+      <option value="prepaid">Prepaid</option>
+      <option value="cod">Cash on Delivery</option>
+    </select>
+    <div id="codEligibilityNote" style="font-size:13px;color:#ffd54f"></div>
 
-      <!-- Generic Add-on -->
-      <div class="grid grid-3">
-        <div>
-          <label for="addonName">Add-on Name</label>
-          <input id="addonName" placeholder="e.g., Extra Controller">
-        </div>
-        <div>
-          <label for="addonAmount">Add-on Amount (₹)</label>
-          <input id="addonAmount" type="number" min="0" step="1" placeholder="0">
-        </div>
-        <div style="display:flex; align-items:end; justify-content:flex-end">
-          <span class="pill" id="codRulePill">COD: ₹99 ≤ ₹1,999 • Free above</span>
-        </div>
-      </div>
+    <label>Coupon (Prepaid ke liye Coupon)</label>
+    <input id="coupon">
 
-      <div class="grid grid-3">
-        <div>
-          <label for="courier">Courier</label>
-          <select id="courier">
-            <option>Delhivery</option>
-            <option>DTDC</option>
-            <option>Bluedart</option>
-            <option>Speed Post</option>
-            <option>Xpressbees</option>
-          </select>
-        </div>
-        <div>
-          <label for="paymentmode">Payment Mode</label>
-          <select id="paymentmode">
-            <option value="prepaid">Prepaid</option>
-            <option value="cod">Cash on Delivery</option>
-          </select>
-          <div class="note" id="codEligibilityNote"></div>
-        </div>
-        <div>
-          <label for="baseprice">Base Price (₹)</label>
-          <input id="baseprice" type="number" placeholder="Enter base price">
-        </div>
-      </div>
+    <label>Base Price (₹)</label><input id="baseprice" type="number">
+    <label>Discount Applied (₹)</label><input id="discount" readonly>
+    <label>Amount Paid (₹)</label><input id="amountpaid" readonly>
+    <label>Rest on Delivery (₹)</label><input id="restamount" readonly>
 
-      <div class="line"></div>
-
-      <div class="grid grid-3">
-        <div>
-          <label>Discount Applied (₹)</label>
-          <input id="discount" value="0" readonly>
-        </div>
-        <div>
-          <label for="amountpaid">Amount Paid (₹)</label>
-          <input id="amountpaid" type="number" placeholder="Auto">
-        </div>
-        <div>
-          <label for="restamount">Rest on Delivery (₹)</label>
-          <input id="restamount" placeholder="Auto" readonly>
-        </div>
-      </div>
-
-      <div class="summary" id="snapshot">Base ₹0
+    <div class="summary" id="snapshot">Base ₹0
 Add-on ₹0
 Total ₹0
 COD Charges ₹0
 Advance (if COD) ₹0
 Rest (if COD) ₹0</div>
-
-      <div class="note">
-        <b>Rules:</b> No COD at or below <b>₹1,300</b>. For COD totals up to <b>₹1,999</b>, charge <b>₹99</b>. Above that, COD is <b>free</b>.
-      </div>
-    </div>
-  </section>
-
-  <!-- QR -->
-  <section class="card" style="grid-column:1/-1">
-    <img class="qr" id="qr-image" src="https://gamesplanet13.github.io/Ordernow/Qr.jpg" alt="Paytm QR">
-    <div class="note" style="text-align:center">Scan to pay or tap <b>Pay Now</b>. UPI deeplink uses amount only.</div>
-  </section>
-
+  </div>
 </main>
 
-<!-- Fixed actions -->
 <div class="actions">
   <div class="actions-inner">
     <button class="btn-pay" onclick="payNow()">Pay Now</button>
@@ -223,205 +88,78 @@ Rest (if COD) ₹0</div>
 </div>
 
 <script>
-/* ===== Globals ===== */
-let pincodeLatLng = {};
-let globalDistance = "N/A";
-let globalETA = "N/A";
-let globalEstimatedDate = "N/A";
+const el=id=>document.getElementById(id);
+let globalDistance="N/A", globalETA="N/A", globalEstimatedDate="N/A";
 
-/* ===== Load pincode lat/lng ===== */
-fetch('pincode_data.json')
-  .then(r=>r.json())
-  .then(d=>{ pincodeLatLng = d; })
-  .catch(()=>console.log('pincode_data.json not loaded'));
-
-/* ===== Utils ===== */
-const el = id => document.getElementById(id);
-const months = ["Jan","Feb","Mar","Apr","May","Jun","July","Aug","Sep","Oct","Nov","Dec"];
-
-function haversine(lat1, lon1, lat2, lon2) {
-  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R*(2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-}
-function estimateDeliveryByDistance(distance){
-  if (distance<=30) return "1 day";
-  else if (distance<=60) return "1-2 days";
-  else if (distance<=100) return "2-3 days";
-  else if (distance<=200) return "3-4 days";
-  else if (distance<=500) return "4-5 days";
-  else if (distance<=1000) return "4-6 days";
-  else if (distance<=1500) return "5–7 days";
-  else if (distance<=2000) return "6–8 days";
-  else if (distance<=3000) return "6–10 days";
-  else return "8–12 days (sometimes up to 15 days)";
-}
-function apply7pmShift(minDays, maxDays){
-  const now=new Date(), hour=now.getHours(), dow=now.getDay(); // 0 Sun .. 6 Sat
-  if (hour>=19 && dow>=1 && dow<=5) { return [minDays+1, maxDays+1]; }
-  return [minDays, maxDays];
-}
-function etaToDateRange(etaText){
-  const nums=(etaText.match(/\d+/g)||[]).map(Number);
-  if(!nums.length) return "N/A";
-  let minDays=Math.min(...nums), maxDays=Math.max(...nums);
-  [minDays,maxDays]=apply7pmShift(minDays,maxDays);
-  const s=new Date(), e=new Date(); s.setDate(s.getDate()+minDays); e.setDate(e.getDate()+maxDays);
-  const fmt=d=>`${d.getDate()} ${months[d.getMonth()]}`;
-  return `${fmt(s)} to ${fmt(e)}`;
-}
-
-/* ===== Pincode handler ===== */
-el('pincode').addEventListener('input', function(){
-  const pin=this.value.trim(); if(pin.length!==6) return;
-  fetch(`https://api.postalpincode.in/pincode/${pin}`)
-    .then(r=>r.json())
-    .then(data=>{
-      if(!data?.[0] || data[0].Status!=="Success") return;
-      const first=data[0].PostOffice[0];
-      el('state').value=first.State||""; el('city').value=first.District||"";
-      const sel=el('postoffice'); sel.innerHTML='<option value="">Select Post Office</option>';
-      data[0].PostOffice.forEach(p=>{ const o=document.createElement('option'); o.value=p.Name; o.textContent=p.Name; sel.appendChild(o); });
-
-      if(pincodeLatLng[pin]){
-        const rampurLat=28.8, rampurLng=79.0;
-        const d=Math.round(haversine(rampurLat, rampurLng, pincodeLatLng[pin].lat, pincodeLatLng[pin].lng));
-        const eta=estimateDeliveryByDistance(d);
-        globalDistance=`${d} km`; globalETA=eta; globalEstimatedDate=etaToDateRange(eta);
-        el('deliveryEstimate').textContent = `📍 Pincode OK — Distance: ${globalDistance}
-⏳ ETA: ${globalETA}
-📅 Estimated Delivery: ${globalEstimatedDate}
-
-📝 Timeline is based on past deliveries; rare delays (1–3 days) can occur.`;
-      } else {
-        globalDistance="N/A"; globalETA="N/A"; globalEstimatedDate="N/A";
-        el('deliveryEstimate').textContent="📍 Pincode found, but no distance data.";
-      }
-      updateDispatchNote();
-    });
-});
-
-/* ===== Delhivery dispatch note ===== */
-function updateDispatchNote(){
-  const c=el('courier').value;
-  el('dispatchNote').textContent=(c==="Delhivery")?"🚚 Delhivery: Dispatch after 2 PM, Monday–Saturday.":"";
-}
-el('courier').addEventListener('change', updateDispatchNote);
-
-/* ===== Pricing rules (NO COUPON) =====
+/* --- Rules --- 
    Total = Base + Add-on
-   COD not allowed if Total <= 1300
-   COD charges: if Total <= 1999 => 99 else 0
-   COD advance: max(₹500, 10% of Total)
+   COD not allowed <= 1300
+   COD charges: 99 if Total <=1999 else 0
+   COD advance = max(500,10% of Total)
+   Coupon gpz2025 works only Prepaid, -200/-300/-500 (64/128/256+)
 */
-['product','variant','baseprice','paymentmode','addonName','addonAmount'].forEach(id=>{
-  el(id).addEventListener(id==='baseprice' || id==='addonAmount' ? 'input':'change', updateSummary);
-});
 
-function totalAmount(){
-  const base = parseInt(el('baseprice').value)||0;
-  const addon = parseInt(el('addonAmount').value)||0;
-  return base + addon;
-}
-function codCharges(total){
-  return (total<=1999) ? 99 : 0;
-}
-function updateCodEligibility(total){
-  const codOpt = el('paymentmode').querySelector('option[value="cod"]');
-  const note = el('codEligibilityNote');
-  if (total<=1300){
-    codOpt.disabled = true;
-    if (el('paymentmode').value==='cod') el('paymentmode').value='prepaid';
-    note.innerHTML = `⚠ <span class="warn">COD not available at or below ₹1,300.</span>`;
-  } else {
-    codOpt.disabled = false;
-    note.textContent = `COD charges: ₹99 up to ₹1,999; free above ₹1,999.`;
-  }
-}
-
+function totalAmount(){return (parseInt(el("baseprice").value)||0)+(parseInt(el("addonAmount").value)||0);}
+function codCharges(total){return total<=1999?99:0;}
 function updateSummary(){
-  const mode = el('paymentmode').value;
-  const total = totalAmount();
-  const codFee = (mode==='cod') ? codCharges(total) : 0;
+  const mode=el("paymentmode").value, total=totalAmount();
+  const product=(el("product").value||"").toLowerCase(), variant=(el("variant").value||"").toLowerCase();
+  const is64=/64/.test(variant), is128=/128/.test(variant), is256plus=/(256|500|1tb)/.test(variant);
+  const coupon=el("coupon").value.trim().toLowerCase();
 
-  updateCodEligibility(total);
+  // COD block rule
+  if(total<=1300){
+    el("paymentmode").value="prepaid";
+    el("codEligibilityNote").innerText="⚠ COD not available at or below ₹1,300.";
+  }else{
+    el("codEligibilityNote").innerText="COD: ₹99 ≤ 1999, Free above.";
+  }
 
-  const discount = 0; // coupon removed
-  const amountPaid = (mode==='cod') ? Math.max(500, Math.ceil(total*0.10)) : Math.max(0, total - discount);
-  const rest = (mode==='cod') ? Math.max(0, total + codFee - amountPaid) : 0;
+  let discount=0;
+  if(coupon==="gpz2025" && mode==="prepaid"){
+    if(is64) discount=200; else if(is128) discount=300; else if(is256plus) discount=500;
+  }
 
-  el('discount').value = discount;
-  el('amountpaid').value = amountPaid;
-  el('restamount').value = rest;
+  const codFee=(mode==="cod")?codCharges(total):0;
+  const paid=(mode==="cod")?Math.max(500,Math.ceil(total*0.1)):total-discount;
+  const rest=(mode==="cod")?total+codFee-paid:0;
 
-  const addon = parseInt(el('addonAmount').value)||0;
-  el('snapshot').textContent =
-    `Base ₹${parseInt(el('baseprice').value)||0}
-Add-on ₹${addon}
+  el("discount").value=discount;
+  el("amountpaid").value=paid;
+  el("restamount").value=rest;
+  el("snapshot").textContent=`Base ₹${parseInt(el("baseprice").value)||0}
+Add-on ₹${parseInt(el("addonAmount").value)||0}
 Total ₹${total}
 COD Charges ₹${codFee}
-Advance (if COD) ₹${mode==='cod'?amountPaid:0}
-Rest (if COD) ₹${mode==='cod'?rest:0}`;
+Advance (if COD) ₹${mode==="cod"?paid:0}
+Rest (if COD) ₹${mode==="cod"?rest:0}`;
 }
 
-/* ===== Pay Now (UPI amount only) ===== */
-function payNow(){
-  const amount = (el('amountpaid').value||'').trim();
-  if (!amount || isNaN(+amount) || +amount<=0) { alert('Enter/auto-calc a valid Amount Paid first.'); return; }
-  window.open(`upi://pay?pa=gamesplanet@upi&am=${amount}`, '_blank');
-}
+["baseprice","addonAmount","paymentmode","coupon","variant","product"].forEach(id=>{
+  el(id).addEventListener("input",updateSummary);
+  el(id).addEventListener("change",updateSummary);
+});
 
-/* ===== Validation ===== */
-function validMobile(m){ return /^[6-9]\d{9}$/.test(m); }
-function validPin(p){ return /^\d{6}$/.test(p); }
-function requireFields(){
-  const errs=[];
-  if(!el('name').value.trim()) errs.push('Name is required');
-  if(!validMobile(el('mobile').value.trim())) errs.push('Valid 10-digit Mobile is required');
-  if(!el('address').value.trim()) errs.push('Address is required');
-  if(!validPin(el('pincode').value.trim())) errs.push('Valid 6-digit Pincode is required');
-  if(!el('postoffice').value) errs.push('Select Post Office');
-  if(!el('product').value.trim()) errs.push('Product is required');
-  if(!el('baseprice').value.trim()) errs.push('Base Price is required');
-  // Enforce COD eligibility at submit too
-  const total = totalAmount();
-  if (total<=1300 && el('paymentmode').value==='cod') errs.push('COD not allowed at or below ₹1,300');
-  return errs;
-}
+function payNow(){const amt=el("amountpaid").value;if(amt)window.open(`upi://pay?pa=gamesplanet@upi&am=${amt}`);}
 
-/* ===== WhatsApp Submit ===== */
 function sendOrder(){
-  const errs=requireFields(), btn=el('orderBtn');
-  if(errs.length){ alert('Please fix:\n• ' + errs.join('\n• ')); return; }
-
-  // Title case name
-  el('name').value = el('name').value.trim().replace(/\s+/g,' ').split(' ')
-    .map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join(' ');
-
   const now=new Date();
-  const orderId = String(now.getDate()).padStart(2,'0') + String(now.getMonth()+1).padStart(2,'0') + now.getFullYear() +
-                  String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0') + '00';
+  const orderId=now.getTime();
+  const gv=id=>el(id).value||"";
+  const mode=gv("paymentmode"), total=totalAmount();
+  const codFee=(mode==="cod")?codCharges(total):0;
 
-  const gv=id=>el(id)?.value||"";
-  const mode=gv('paymentmode');
-  const total=totalAmount();
-  const codFee = (mode==='cod') ? codCharges(total) : 0;
-
-  // COD ETA bump +2/+3 days
   let eta=globalETA, delivery=globalEstimatedDate;
-  if (mode==='cod' && /\d/.test(globalETA||"")){
+  if(mode==="cod" && /\d/.test(globalETA)){
     const nums=globalETA.match(/\d+/g).map(Number);
-    const newMin=nums[0]+2, newMax=(nums[1]||nums[0])+3;
-    eta=`${newMin}–${newMax} days`; delivery=etaToDateRange(eta);
+    eta=`${(nums[0]||0)+2}–${(nums[1]||nums[0])+3} days`;
   }
 
-  const postOfficeVal = gv('postoffice');
-  const courier = gv('courier');
-  const addonLine = gv('addonName') ? `Add-on: ${gv('addonName')} — ₹${parseInt(gv('addonAmount'))||0}` : "Add-on: None";
+  const addonLine=gv("addonName")?`Add-on: ${gv("addonName")} — ₹${gv("addonAmount")}`:"Add-on: None";
 
-  let msg;
-  if (mode==='prepaid'){
-    msg = `🟢 Prepaid Order on WhatsApp
+  let msg="";
+  if(mode==="prepaid"){
+    msg=`🟢 Prepaid Order on WhatsApp
 
 Order ID: ${orderId}
 Name: ${gv("name")}
@@ -433,21 +171,20 @@ Landmark: ${gv("landmark")}
 Pincode: ${gv("pincode")}
 State: ${gv("state")}
 District/City: ${gv("city")}
-Post Office: ${postOfficeVal}
-
+Post office: ${gv("postoffice")}
 Product: ${gv("product")}
 Variant: ${gv("variant")}
 ${addonLine}
-Courier: ${courier}
-Base Price: ₹${parseInt(gv("baseprice"))||0}
-Discount Applied: ₹0
+Base Price: ₹${gv("baseprice")}
+Discount Applied: ₹${gv("discount")}
 Amount Paid: ₹${gv("amountpaid")}
 
 📏 Distance: ${globalDistance}
 ⏳ Prepaid Order ETA: ${eta}
-📅 Estimated Delivery: ${delivery}${courier==="Delhivery" ? "\n🕒 Dispatch after 2 PM (Mon–Sat) via Delhivery." : ""}`;
+📅 Estimated Delivery: ${delivery}
+Delivery Circumstances and conditions:`;
   } else {
-    msg = `🔴 COD Order on WhatsApp
+    msg=`🔴 COD Order on WhatsApp
 
 Order ID: ${orderId}
 Name: ${gv("name")}
@@ -459,30 +196,23 @@ Landmark: ${gv("landmark")}
 Pincode: ${gv("pincode")}
 State: ${gv("state")}
 District/City: ${gv("city")}
-Post Office: ${postOfficeVal}
-
+Post office: ${gv("postoffice")}
 Product: ${gv("product")}
 Variant: ${gv("variant")}
 ${addonLine}
-Courier: ${courier}
-Base Price: ₹${parseInt(gv("baseprice"))||0}
-COD Charges: ₹${codFee}
-Amount Paid (Advance): ₹${gv("amountpaid")}
-Rest Amount on Delivery: ₹${gv("restamount")}
+Base Price: ₹${gv("baseprice")}
+Discount Applied: ₹${gv("discount")}
+Amount Paid: ₹${gv("amountpaid")}
+Rest on Delivery: ₹${gv("restamount")}
 
 📏 Distance: ${globalDistance}
 ⏳ COD Order ETA: ${eta}
-📅 Estimated Delivery: ${delivery}${courier==="Delhivery" ? "\n🕒 Dispatch after 2 PM (Mon–Sat) via Delhivery." : ""}`;
+📅 Estimated Delivery: ${delivery}
+Delivery Circumstances and conditions:`;
   }
-
-  btn.disabled=true;
-  location.href = `https://wa.me/917983624797?text=${encodeURIComponent(msg)}`;
-  setTimeout(()=>{ btn.disabled=false; }, 2000);
+  location.href=`https://wa.me/917983624797?text=${encodeURIComponent(msg)}`;
 }
-
-/* Init */
 updateSummary();
-updateDispatchNote();
 </script>
 </body>
 </html>
