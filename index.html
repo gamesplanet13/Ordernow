@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Games Planet Order Form – ETA Final</title>
+<title>Games Planet Order Form – ETA Final (Smart Variants)</title>
 <style>
   body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background:#0b1020; color:#eaf1ff; }
   input, select, textarea {
@@ -20,6 +20,7 @@
   img { width: 250px; margin: 20px 0; border-radius:10px }
   #deliveryEstimate { font-size: 15px; color: #9be09b; margin-top: 10px; white-space: pre-line; background:#0f1530; border:1px dashed #2a335a; padding:10px; border-radius:8px}
   #codNote { font-size:13px; color:#ffd54f; margin-top:4px }
+  .muted { font-size:12px; color:#9fb0d3; margin-top:2px }
 </style>
 </head>
 <body>
@@ -47,7 +48,7 @@
 <!-- Product: typeable dropdown (datalist) -->
 <input type="text" id="product" list="productOptions" placeholder="Product (type or pick)">
 <datalist id="productOptions">
-  <!-- Retro / Sticks (no PS2/PS3/PS4/X360 here per your ask) -->
+  <!-- Retro / Sticks (PS2/PS3/PS4/X360 removed from list per your ask; typing allowed) -->
   <option value="OG GameStick GD30 64GB"></option>
   <option value="OG GameStick GD30 128GB"></option>
   <option value="OG GameStick GD30 256GB"></option>
@@ -91,7 +92,13 @@
   <option value="SEGA 16 BIT MINI U BOX MD"></option>
 </datalist>
 
-<input type="text" id="variant" placeholder="Variant (e.g., 64GB / 128GB / 256GB)">
+<!-- Variant smart UI: shows dropdown for known products, else free text -->
+<div id="variantWrap">
+  <select id="variantSelect" style="display:none"></select>
+  <input type="text" id="variantInput" placeholder="Variant (64GB / 128GB / 256GB / 500GB / 1TB / SSD / HDD / Pendrive / Single / Dual)">
+  <div class="muted" id="variantHint"></div>
+</div>
+
 <div id="codNote"></div>
 
 <input type="text" id="coupon" placeholder="Coupon Code (if any)">
@@ -111,12 +118,21 @@
 <img src="https://gamesplanet13.github.io/Ordernow/Qr.jpg" alt="Paytm QR" id="qr-image"/>
 
 <script>
+/* ==================== GLOBALS ==================== */
 let pincodeLatLng = {};
 let globalDistance = "N/A";
+
+/* Back-compat for older code */
 let globalETA = "N/A";
 let globalEstimatedDate = "N/A";
 
-// ---------- Pincode data ----------
+/* New: show both prepaid & COD on page */
+let globalETAPrepaid = "N/A";
+let globalEstimatedDatePrepaid = "N/A";
+let globalETACOD = "N/A";
+let globalEstimatedDateCOD = "N/A";
+
+/* ==================== PINCODE / DISTANCE ==================== */
 fetch('pincode_data.json')
   .then(res => res.json())
   .then(data => { pincodeLatLng = data; })
@@ -145,7 +161,6 @@ function estimateDeliveryByDistance(distance) {
   else if (distance <= 3000) return "6–10 days";
   else return "8–12 days (sometimes up to 15 days)";
 }
-
 function calculateEstimatedDate(etaText) {
   const numbers = etaText.match(/\d+/g);
   if (!numbers || numbers.length === 0) return "N/A";
@@ -154,9 +169,16 @@ function calculateEstimatedDate(etaText) {
   const start = new Date(); const end = new Date();
   start.setDate(start.getDate() + minDays);
   end.setDate(end.getDate() + maxDays);
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const formatDate = (d) => `${d.getDate()} ${months[d.getMonth()]}`;
-  return `${formatDate(start)} to ${formatDate(end)}`;
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","July","Aug","Sep","Oct","Nov","Dec"];
+  const fmt = d=>`${d.getDate()} ${months[d.getMonth()]}`;
+  return `${fmt(start)} to ${fmt(end)}`;
+}
+function makeCodEta(baseEtaText){
+  if(!/\d/.test(baseEtaText)) return "N/A";
+  const nums = baseEtaText.match(/\d+/g).map(Number);
+  const min = (nums[0]||0) + 2;
+  const max = (nums[1]||nums[0]||0) + 3;
+  return `${min}–${max} days`;
 }
 
 document.getElementById("pincode").addEventListener("input", function(){
@@ -181,19 +203,47 @@ document.getElementById("pincode").addEventListener("input", function(){
             const rampurLat = 28.8, rampurLng = 79.0;
             const dest = pincodeLatLng[pincode];
             const distance = Math.round(haversine(rampurLat, rampurLng, dest.lat, dest.lng));
-            const eta = estimateDeliveryByDistance(distance);
-            const deliveryDate = calculateEstimatedDate(eta);
+
+            // Prepaid ETA + Date
+            const prepaidEta = estimateDeliveryByDistance(distance);
+            const prepaidDate = calculateEstimatedDate(prepaidEta);
+
+            // COD ETA + Date (+2 to +3)
+            const codEta = makeCodEta(prepaidEta);
+            const codDate = calculateEstimatedDate(codEta);
+
+            // Store
             globalDistance = `${distance} km`;
-            globalETA = eta;
-            globalEstimatedDate = deliveryDate;
+            globalETAPrepaid = prepaidEta;
+            globalEstimatedDatePrepaid = prepaidDate;
+            globalETACOD = codEta;
+            globalEstimatedDateCOD = codDate;
+
+            // backward-compat for any old usage:
+            globalETA = prepaidEta;
+            globalEstimatedDate = prepaidDate;
+
+            // Show BOTH on page
             document.getElementById("deliveryEstimate").innerText =
 `📍 Pincode found – Distance: ${globalDistance}
-⏳ ETA: ${globalETA}
-📅 Estimated Delivery: ${globalEstimatedDate}
+
+🟢 Prepaid
+⏳ ETA: ${globalETAPrepaid}
+📅 Estimated Delivery: ${globalEstimatedDatePrepaid}
+
+🔴 COD (+2–3 days)
+⏳ ETA: ${globalETACOD}
+📅 Estimated Delivery: ${globalEstimatedDateCOD}
 
 📝 Delivery timeline is based on past experience. Sometimes it may delay by 1–3 days due to unforeseen circumstances.`;
           } else {
-            globalDistance = "N/A"; globalETA = "N/A"; globalEstimatedDate = "N/A";
+            globalDistance = "N/A";
+            globalETAPrepaid = "N/A";
+            globalEstimatedDatePrepaid = "N/A";
+            globalETACOD = "N/A";
+            globalEstimatedDateCOD = "N/A";
+            globalETA = "N/A";
+            globalEstimatedDate = "N/A";
             document.getElementById("deliveryEstimate").innerText = "📍 Pincode found, but no distance data.";
           }
         }
@@ -201,51 +251,194 @@ document.getElementById("pincode").addEventListener("input", function(){
   }
 });
 
-// ---------- Product auto-pricing ----------
-const priceMap = {
-  "og gamestick gd30": { "64gb": 3699, "128gb": 5899, "256gb": 6999 },
-  "m55 gamestick": { "64gb": 3499, "128gb": 5999, "256gb": 6999 },
-  "m66 gamestick": { "64gb": 2999, "128gb": 4999, "256gb": 5999 },
-  "m88 gamestick": { "128gb": 7799 },
-  "fmcb 8mb card for ps2": 999,
-  "sega 16 bit mini u box md": 1199
+/* ==================== CATALOG (variants + prices) ==================== */
+const catalog = {
+  // Sticks with capacity
+  "og gamestick gd30": {
+    variants: ["64GB","128GB","256GB"],
+    prices: { "64GB":3699, "128GB":5899, "256GB":6999 }
+  },
+  "og gamestick gd30v3": {
+    variants: ["64GB","128GB","256GB"]
+  },
+  "og gamestick gd30v3 special edition": {
+    variants: ["64GB","128GB","256GB"]
+  },
+  "m55 gamestick": {
+    variants: ["64GB","128GB","256GB"],
+    prices: { "64GB":3499, "128GB":5999, "256GB":6999 }
+  },
+  "m66 gamestick": {
+    variants: ["64GB","128GB","256GB"],
+    prices: { "64GB":2999, "128GB":4999, "256GB":5999 }
+  },
+  "m88 gamestick": {
+    variants: ["128GB"],
+    prices: { "128GB":7799 }
+  },
+  "gamestick gd10 (vayava)": { variants:["64GB","128GB","256GB"] },
+  "gd35 10k gamestick": { variants:["64GB","128GB","256GB"] },
+  "gd35 10k gamestick gta san edition": { variants:["64GB","128GB","256GB"] },
+
+  // Gamebox / Pandora style (Single / Dual)
+  "gamebox plus g10 (vayava)": { variants:["Single","Dual"] },
+  "gamebox plus g10 ultimate edition": { variants:["Single","Dual"] },
+  "gamebox g11 pro (vayava)": { variants:["Single","Dual"] },
+  "gamebox g11 pro special edition p3": { variants:["Single","Dual"] },
+  "gamebox g11 pro ultimate edition": { variants:["Single","Dual"] },
+  "pandora gamestick lite (aoko)": { variants:["Single","Dual"] },
+  "pandora gamestick pro (whitebox)": { variants:["Single","Dual"] },
+  "x7m sup game": { variants:["Single","Dual"] },
+  "gpz r35s": { variants:["—"] },
+  "gta hd edition": { variants:["—"] },
+
+  // PS2 accessories / media
+  "fmcb 8mb card for ps2": {
+    variants: ["—"],               // fixed price
+    price: 999
+  },
+  "usb (preloaded games) — pendrive": {
+    variants: ["64GB","128GB","256GB","500GB","1TB","Pendrive","Single","Dual","—"],
+  },
+  "usb (preloaded games) — external hdd": {
+    variants: ["500GB","1TB","2TB","External HDD","Single","Dual","—"],
+  },
+  "usb (preloaded games) — ssd": {
+    variants: ["500GB","1TB","2TB","SSD","Single","Dual","—"],
+  },
+  "fmc b + usb combo (top games)": {
+    variants: ["64GB","128GB","256GB","500GB","1TB","Pendrive","External HDD","SSD","Single","Dual"]
+  },
+  "fmc b + usb combo (optional games)": {
+    variants: ["64GB","128GB","256GB","500GB","1TB","Pendrive","External HDD","SSD","Single","Dual"]
+  },
+  "optional games usb": {
+    variants: ["64GB","128GB","256GB","500GB","1TB","Pendrive","External HDD","SSD","Single","Dual"]
+  },
+
+  // Classic Retro / others
+  "sega 16 bit mini u box md": {
+    variants:["—"],
+    price: 1199
+  }
 };
+
+/* ==================== NORMALIZERS ==================== */
+const variantSelect = document.getElementById("variantSelect");
+const variantInput  = document.getElementById("variantInput");
+const variantHint   = document.getElementById("variantHint");
+
 const norm = s => (s||"").toLowerCase().replace(/\s+/g," ").trim();
 const extractCapacity = v => {
   const s=norm(v);
-  if(/1\s*tb/.test(s)) return "1tb";
-  if(/500\s*gb/.test(s)) return "500gb";
-  if(/256\s*gb/.test(s)) return "256gb";
-  if(/128\s*gb/.test(s)) return "128gb";
-  if(/64\s*gb/.test(s))  return "64gb";
+  if(/2\s*tb/.test(s)) return "2TB";
+  if(/1\s*tb/.test(s)) return "1TB";
+  if(/500\s*gb/.test(s)) return "500GB";
+  if(/256\s*gb/.test(s)) return "256GB";
+  if(/128\s*gb/.test(s)) return "128GB";
+  if(/64\s*gb/.test(s))  return "64GB";
   return "";
 };
-const guessKeyFromProduct = p => {
-  let s=norm(p).replace(/\bv\d+\b/g,"").replace(/\s+/g," ").trim();
-  if(priceMap[s] !== undefined) return s;
-  const s2 = s.replace(/\s+\d+(gb|tb)\b/,"").trim(); if(priceMap[s2] !== undefined) return s2;
-  const s3 = s.replace(/\bog\b|\bgpz\b/g,"").replace(/\s+/g," ").trim(); if(priceMap[s3] !== undefined) return s3;
-  if(/gd30\b/.test(s)) return "og gamestick gd30";
-  return null;
-};
-function autoPrice(){
-  const p = document.getElementById("product").value;
-  const v = document.getElementById("variant").value;
-  const key = guessKeyFromProduct(p);
-  if(!key) return;
-  const entry = priceMap[key];
-  if(entry == null) return;
-  let price = null;
-  if(typeof entry === "number") price = entry;
-  else if(typeof entry === "object"){
-    const cap = extractCapacity(v) || extractCapacity(p);
-    if(cap && entry[cap] != null) price = entry[cap];
+
+function guessKeyFromProduct(p){
+  let s = norm(p).replace(/\bv\d+\b/g,"").replace(/\s+/g," ").trim();
+
+  // collapse USB family keys
+  if(s.startsWith("usb (preloaded games)")) {
+    if(s.includes("external hdd")) return "usb (preloaded games) — external hdd";
+    if(s.includes("ssd")) return "usb (preloaded games) — ssd";
+    return "usb (preloaded games) — pendrive";
   }
-  if(price != null) document.getElementById("baseprice").value = price;
+
+  // remove capacity suffix for base key
+  const s2 = s.replace(/\s+\d+(gb|tb)\b/,"").trim();
+
+  if(catalog[s]) return s;
+  if(catalog[s2]) return s2;
+
+  // remove "og" / "gpz"
+  const s3 = s2.replace(/\bog\b|\bgpz\b/g,"").replace(/\s+/g," ").trim();
+  if(catalog[s3]) return s3;
+
+  // special-case gd30
+  if(/gd30\b/.test(s)) return "og gamestick gd30";
+
+  return null;
 }
 
-// ---------- Order math (coupon, COD, etc.) ----------
-function totalAmount(){ // no add-ons on this page, so total = base
+/* ==================== VARIANT UI ==================== */
+function showVariantDropdown(options){
+  variantSelect.innerHTML = "";
+  options.forEach(v=>{
+    const opt = document.createElement("option");
+    opt.value = v; opt.text = v;
+    variantSelect.appendChild(opt);
+  });
+  variantSelect.style.display = "block";
+  variantInput.style.display  = "none";
+  variantHint.textContent = "Pick a variant from the list.";
+}
+function showVariantFreeText(suggestion=""){
+  variantSelect.style.display = "none";
+  variantInput.style.display  = "block";
+  variantHint.textContent = suggestion ? `Suggested variants: ${suggestion}` : "";
+}
+
+function onProductChange(){
+  const pVal = document.getElementById("product").value;
+  const key = guessKeyFromProduct(pVal);
+  if(!key){
+    showVariantFreeText("64GB / 128GB / 256GB / 500GB / 1TB / Pendrive / External HDD / SSD / Single / Dual");
+    return updateMoney();
+  }
+  const entry = catalog[key] || {};
+  const opts = entry.variants || [];
+
+  if(opts.length){
+    showVariantDropdown(opts);
+    const capFromProduct = extractCapacity(pVal);
+    if(capFromProduct){
+      const idx = opts.findIndex(o => norm(o) === norm(capFromProduct));
+      if(idx >= 0){ variantSelect.value = opts[idx]; } else { variantInput.value = capFromProduct; }
+    } else {
+      variantSelect.selectedIndex = 0;
+      variantInput.value = "";
+    }
+  } else {
+    showVariantFreeText();
+  }
+
+  // Fixed price (no variant table)
+  if(entry.price){
+    document.getElementById("baseprice").value = entry.price;
+  }
+
+  updateMoney();
+}
+
+function onVariantChange(){
+  const pVal = document.getElementById("product").value;
+  const key  = guessKeyFromProduct(pVal);
+  if(!key) { return updateMoney(); }
+
+  const entry = catalog[key] || {};
+  const selectedVariant = (variantSelect.style.display==="block")
+    ? variantSelect.value
+    : variantInput.value;
+
+  if(entry.prices && selectedVariant){
+    const price = entry.prices[selectedVariant];
+    if(price != null) document.getElementById("baseprice").value = price;
+  }
+  updateMoney();
+}
+
+document.getElementById("product").addEventListener("input", onProductChange);
+variantSelect.addEventListener("change", onVariantChange);
+variantInput.addEventListener("input", onVariantChange);
+
+/* ==================== ORDER MATH (coupon, COD, etc.) ==================== */
+function totalAmount(){  // No add-ons on this page, so total = base
   return parseInt(document.getElementById("baseprice").value) || 0;
 }
 function codCharges(total, productStr){
@@ -255,13 +448,11 @@ function codCharges(total, productStr){
   return total >= 1499 ? 0 : 99;     // Otherwise: free if ≥1499
 }
 function updateMoney(){
-  autoPrice();
-
-  const coupon = document.getElementById("coupon").value.trim().toLowerCase();
-  const mode = document.getElementById("paymentmode").value;
+  const coupon  = document.getElementById("coupon").value.trim().toLowerCase();
+  const mode    = document.getElementById("paymentmode").value;
   const product = document.getElementById("product").value.toLowerCase();
-  const variant = document.getElementById("variant").value.toLowerCase();
-  const base = totalAmount();
+  const variant = (variantSelect.style.display==="block") ? variantSelect.value : variantInput.value;
+  const base    = totalAmount();
 
   // COD availability note
   if(base <= 1300){
@@ -274,13 +465,13 @@ function updateMoney(){
       : "COD: ₹99 < 1499, Free ≥ 1499.";
   }
 
-  const is64 = /64/.test(variant);
-  const is128 = /128/.test(variant);
-  const is256plus = /(256|500|1tb)/.test(variant);
+  const is64 = /64/i.test(variant);
+  const is128 = /128/i.test(variant);
+  const is256plus = /(256|500|1tb)/i.test(variant);
 
   // Discount logic:
-  // - For FMCB / USB / FMCB+USB Combo → 5% off (prepaid + coupon)
-  // - For others → ₹200/₹300/₹500 by 64/128/256+ (prepaid + coupon)
+  // - FMCB / any USB / FMCB+USB Combo → 5% off (prepaid + coupon)
+  // - Others → ₹200/₹300/₹500 by 64/128/256+ (prepaid + coupon)
   let discount = 0;
   if (coupon === "gpz2025" && mode === "prepaid") {
     const special5 = /(fmcb|usb)/.test(product); // covers fmcb, usb, fmcb + usb combo
@@ -304,13 +495,17 @@ function updateMoney(){
   document.getElementById("restamount").value = rest;
 }
 
-["coupon","variant","product","baseprice","paymentmode"].forEach(id=>{
+["coupon","baseprice","paymentmode"].forEach(id=>{
   document.getElementById(id).addEventListener("input", updateMoney);
   document.getElementById(id).addEventListener("change", updateMoney);
 });
+
+/* init money once */
+onProductChange();
+onVariantChange();
 updateMoney();
 
-// ---------- Pay + WhatsApp ----------
+/* ==================== PAY + WHATSAPP ==================== */
 function payNow() {
   const amount = document.getElementById("amountpaid").value;
   if (amount) {
@@ -329,16 +524,13 @@ function sendOrder(){
   const gv = id => document.getElementById(id)?.value || "";
   const mode = gv("paymentmode");
 
-  // COD ETA +2 to +3 days
-  let eta = globalETA;
-  let delivery = globalEstimatedDate;
-  if (mode === "cod" && /\d/.test(globalETA)) {
-    const nums = globalETA.match(/\d+/g).map(Number);
-    const newMin = (nums[0]||0) + 2;
-    const newMax = (nums[1]||nums[0]||0) + 3;
-    eta = `${newMin}–${newMax} days`;
-    delivery = calculateEstimatedDate(eta);
-  }
+  const variant = (variantSelect.style.display==="block") ? variantSelect.value : document.getElementById("variantInput").value;
+
+  // Use already computed global ETAs on page
+  const prepaidEta = globalETAPrepaid;
+  const prepaidDate = globalEstimatedDatePrepaid;
+  const codEta = globalETACOD;
+  const codDate = globalEstimatedDateCOD;
 
   let msg="";
   if (mode === "prepaid") {
@@ -357,14 +549,14 @@ District/City: ${gv("city")}
 Post office: ${gv("postoffice")}
 
 Product: ${gv("product")}
-Variant: ${gv("variant")}
+Variant: ${variant}
 Base Price: ₹${gv("baseprice")}
 Discount Applied: ₹${gv("discount")}
 Amount Paid: ₹${gv("amountpaid")}
 
 📏 Distance: ${globalDistance}
-⏳ Prepaid Order ETA: ${eta}
-📅 Estimated Delivery: ${delivery}`;
+⏳ Prepaid Order ETA: ${prepaidEta}
+📅 Estimated Delivery: ${prepaidDate}`;
   } else {
     const base = totalAmount();
     const codFee = codCharges(base, gv("product"));
@@ -383,15 +575,15 @@ District/City: ${gv("city")}
 Post office: ${gv("postoffice")}
 
 Product: ${gv("product")}
-Variant: ${gv("variant")}
+Variant: ${variant}
 Base Price: ₹${gv("baseprice")}
 Amount Paid: ₹${gv("amountpaid")}
 COD Charges: ₹${codFee}
 Rest Amount on Delivery: ₹${gv("restamount")}
 
 📏 Distance: ${globalDistance}
-⏳ COD Order ETA: ${eta}
-📅 Estimated Delivery: ${delivery}`;
+⏳ COD Order ETA: ${codEta}
+📅 Estimated Delivery: ${codDate}`;
   }
   window.location.href = `https://wa.me/917983624797?text=${encodeURIComponent(msg)}`;
 }
