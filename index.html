@@ -72,6 +72,14 @@ button{
 </div>
 
 <div class="box">
+<b>Courier Selection</b>
+<select id="courierCompany"></select>
+<div class="note" id="courierNote">
+Courier charges अलग-अलग हो सकते हैं और ज़्यादा रह सकते हैं। Please confirm from seller.
+</div>
+</div>
+
+<div class="box">
 <b>Product Details</b>
 
 <input id="manualProduct" placeholder="Product Name">
@@ -250,6 +258,49 @@ else{
 </script>
 
 <script>
+/* ===== COURIER SELECTION ===== */
+const courierCompany = document.getElementById("courierCompany");
+const courierNote = document.getElementById("courierNote");
+
+const prepaidCouriers = [
+  "Trackon.in",
+  "ShreeMaruti.com",
+  "DTDC.in",
+  "Blue Dart",
+  "Ecom",
+  "Delhivery"
+];
+
+const codCouriers = [
+  "Delhivery",
+  "Blue Dart"
+];
+
+function loadCourierOptions(){
+  const type = document.querySelector('input[name="otype"]:checked').value;
+  courierCompany.innerHTML = "";
+
+  const list = type === "COD" ? codCouriers : prepaidCouriers;
+
+  list.forEach(name=>{
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    courierCompany.appendChild(opt);
+  });
+
+  courierNote.textContent =
+    "Courier charges अलग-अलग हो सकते हैं और ज़्यादा रह सकते हैं। Please confirm from seller.";
+}
+
+document.querySelectorAll('input[name="otype"]').forEach(radio=>{
+  radio.addEventListener("change", loadCourierOptions);
+});
+
+loadCourierOptions();
+</script>
+
+<script>
 /* ===== SEND WHATSAPP ===== */
 function sendOrder(){
 const name = document.getElementById("name");
@@ -270,6 +321,7 @@ const etaText = document.getElementById("etaText");
 const dateRange = document.getElementById("dateRange");
 const codEta = document.getElementById("codEta");
 const codRange = document.getElementById("codRange");
+const courierCompanyEl = document.getElementById("courierCompany");
   const type=document.querySelector('input[name="otype"]:checked').value;
   const q=parseInt(qty.value);
   const basePrice =
@@ -277,8 +329,13 @@ parseInt(
 document.getElementById("manualPrice").value
 )||0;
 
-const total=basePrice*q;
-  const codCharge= type==="COD"?199*q:0;
+if(!name.value.trim() || !mobile.value.trim() || !address.value.trim() || !pincode.value.trim() || !manualProduct.value.trim() || !manualVariant.value.trim() || basePrice<=0){
+  alert("Please fill Name, Mobile, Address, Pincode, Product, Variant and Price.");
+  return;
+}
+
+const productTotal=basePrice*q;
+const total=productTotal;
   let adv=0;
 
 if(type==="COD"){
@@ -309,24 +366,32 @@ Post office: ${postoffice.value}
 ${type==="COD"?
 `Product: ${manualProduct.value}
 Variant: ${manualVariant.value}
+Quantity: ${q}
 Base Price: ₹${basePrice}
-Amount Paid: ₹${adv}
+Product Total: ₹${productTotal}
+Courier Company: ${courierCompanyEl.value}
+Courier Charges: Please confirm from seller
+Grand Total: ₹${total}
+Advance Paid: ₹${adv}
 Rest on Delivery: ₹${bal}`
 :
 `Product: ${manualProduct.value}
 Variant: ${manualVariant.value}
+Quantity: ${q}
 Base Price: ₹${basePrice}
+Product Total: ₹${productTotal}
+Courier Company: ${courierCompanyEl.value}
+Courier Charges: Please confirm from seller
 Discount: ₹0
 Amount Paid: ₹${total}`
 }
-${type==="COD"?"Rest on Delivery: ₹"+bal:""}
 
 📏 Distance: ${distance.value}
 ⏳ ${type} Order ETA: ${type==="COD"?codEta.textContent:etaText.value}
 📅 Estimated Delivery: ${type==="COD"?codRange.textContent:dateRange.value}
 `;
 
-  window.open("https://wa.me/917983624797?text="+encodeURIComponent(msg));
+  window.location.href="https://wa.me/917983624797?text="+encodeURIComponent(msg);
 }
 </script>
 
