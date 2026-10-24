@@ -209,7 +209,7 @@ Courier Company: ${val("courier")}
 📏 Distance: ${b.dataset.distance||"N/A"}
 ⏳ ${type()} Order ETA: ${cod?(b.dataset.codEta||"7–11 days"):(b.dataset.preEta||"5–8 days")}
 📅 Estimated Delivery: ${cod?(b.dataset.codRange||"Standard Delivery"):(b.dataset.preRange||"Standard Delivery")}`;
-  GPOrderRecords.send(msg);
+  GPOrderRecords.send(msg, undefined, {sameTab:true});
 }
 $("pincode").addEventListener("input",applyPincode);
 $("postofficeSelect").addEventListener("change",()=>{if(val("postofficeSelect"))$("postofficeManual").value=val("postofficeSelect")});
@@ -219,5 +219,5 @@ $("courier").addEventListener("change",()=>{$("courier").dataset.lastPrepaid=val
 $("submitButton").addEventListener("click",submitOrder);
 updatePayment();
 </script>
-<script src="https://gamesplanet13.github.io/arcade-accessories-/ps2-style-footer.js?v=20261016-ps2-view"></script><script src="https://gamesplanet13.github.io/arcade-accessories-/orders-config.js?v=20261022-orders"></script><script src="https://gamesplanet13.github.io/arcade-accessories-/unified-postal.js?v=20261022-orders"></script><script src="https://gamesplanet13.github.io/arcade-accessories-/order-records.js?v=20261022-orders"></script></body>
+<script src="https://gamesplanet13.github.io/arcade-accessories-/ps2-style-footer.js?v=20261016-ps2-view"></script><script src="https://gamesplanet13.github.io/arcade-accessories-/orders-config.js?v=20261022-orders"></script><script src="https://gamesplanet13.github.io/arcade-accessories-/unified-postal.js?v=20261022-orders"></script><script src="https://gamesplanet13.github.io/arcade-accessories-/order-records.js?v=20261024-same-tab"></script></body>
 </html>
