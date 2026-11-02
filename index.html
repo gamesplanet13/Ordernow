@@ -80,14 +80,16 @@ button:hover{filter:brightness(.96)}
       <option>Trackon.in</option><option>ShreeMaruti.com</option><option>DTDC.in</option>
       <option>Blue Dart</option><option>Ecom</option><option>Delhivery</option>
     </select>
-    <input id="weight" type="number" min="0" step="0.01" value="0" placeholder="Chargeable Weight in KG (COD)" disabled>
-    <div id="paymentNote" class="note"></div>
+    <input id="weight" type="number" min="0" step="0.01" value="0" placeholder="Actual weight in KG (COD)" disabled>
+    <div class="note">Optional box size (cm): chargeable weight = higher of actual and volume / 5000</div><div style="display:flex;gap:6px"><input id="boxL" type="number" min="0" placeholder="Length"><input id="boxW" type="number" min="0" placeholder="Width"><input id="boxH" type="number" min="0" placeholder="Height"></div>
+    <div id="paymentNote" class="note"></div><div id="codRateDisclosure" class="note" style="display:none">Courier charges vary by city, pincode, parcel weight and COD amount. Forward COD rates are rounded UP to the next ₹100 (minimum ₹200), VAS extra. Any final confirmed courier difference will be added to the COD balance payable at delivery. Estimates require booking confirmation.</div>
     <div id="paymentPreview"></div>
   </section>
 
   <button type="button" id="submitButton">Submit Order on WhatsApp</button>
 </main>
 
+<script src="https://gamesplanet13.github.io/arcade-accessories-/cod-shipping-rates.js?v=20261102-forward-cod"></script>
 <script>
 "use strict";
 const SHOP={lat:28.8,lng:79.0,whatsapp:"917983624797"};
@@ -154,8 +156,23 @@ function applyPincode(){
 function type(){return document.querySelector('input[name="orderType"]:checked').value}
 function calculation(){
   const productAmount=Math.max(0,Number(val("amount"))||0),weight=Math.max(0,Number(val("weight"))||0);
-  const kg=type()==="COD"&&weight>0?Math.ceil(weight):0,courierCharge=type()==="COD"?kg*COD_RATE:0,total=productAmount+courierCharge;
-  return{productAmount,weight,kg,courierCharge,total,advance:type()==="COD"?COD_ADVANCE:total,rest:type()==="COD"?Math.max(0,total-COD_ADVANCE):0};
+  const dims=["boxL","boxW","boxH"].map(id=>Math.max(0,Number(val(id))||0));
+  const volumetricKg=dims.every(n=>n>0)?dims[0]*dims[1]*dims[2]/5000:0;
+  const cod=type()==="COD",kg=cod&&weight>0?Math.max(.5,weight,volumetricKg):0;
+  const round100=x=>window.GPZForwardCOD?.round100(x)??Math.max(200,Math.ceil(x/100)*100);
+  const quote=cod?window.GPZForwardCOD?.quote({city:val("city"),state:val("state"),chargeableKg:kg,
+      codAmount:Math.max(0,productAmount-COD_ADVANCE),speed:"surface"}):null;
+  let courierCharge=cod?round100(quote?.raw||Math.ceil(kg)*COD_RATE):0;
+  let vas=cod?Math.ceil((productAmount+courierCharge)*.02):0;
+  if(quote){
+    const revised=window.GPZForwardCOD.quote({city:val("city"),state:val("state"),chargeableKg:kg,
+      codAmount:Math.max(0,productAmount+courierCharge+vas-COD_ADVANCE),speed:"surface"});
+    courierCharge=round100(revised.raw);vas=Math.ceil((productAmount+courierCharge)*.02);
+  }
+  const total=productAmount+courierCharge+vas;
+  return {productAmount,weight,kg,courierCharge,vas,total,
+    source:quote?.source||"Unverified city provisional estimate — confirm before booking",
+    advance:cod?Math.min(COD_ADVANCE,total):total,rest:cod?Math.max(0,total-COD_ADVANCE):0};
 }
 function updateDelivery(){
   const b=$("deliveryBox"),cod=type()==="COD";
@@ -166,12 +183,12 @@ function updatePayment(){
   const c=calculation(),cod=type()==="COD";$("weight").disabled=!cod;
   if(cod){
     $("courier").innerHTML='<option value="Delhivery COD">Delhivery COD</option>';$("courier").disabled=true;
-    $("paymentNote").textContent="COD में ₹500 fixed advance और ₹299 प्रति chargeable KG courier लगेगा। Weight अगले पूरे KG में round होगा।";
-    $("paymentPreview").innerHTML="Product Amount: <b>"+money(c.productAmount)+"</b><br>Chargeable Weight: <b>"+c.kg+" KG</b><br>Courier: <b>"+money(c.courierCharge)+"</b><br>Grand Total: <b>"+money(c.total)+"</b><br>Advance Paid: <b>"+money(c.advance)+"</b><br>Rest on Delivery: <b>"+money(c.rest)+"</b>";
+    $("paymentNote").textContent="COD courier charges city and weight based (next ₹100). "+c.source; $("codRateDisclosure").style.display="block";
+    $("paymentPreview").innerHTML="Product Amount: <b>"+money(c.productAmount)+"</b><br>Chargeable Weight: <b>"+c.kg.toFixed(2)+" KG</b><br>Courier (rounded): <b>"+money(c.courierCharge)+"</b><br>VAS (2%): <b>"+money(c.vas)+"</b><br>Grand Total: <b>"+money(c.total)+"</b><br>Advance Paid: <b>"+money(c.advance)+"</b><br>Rest on Delivery: <b>"+money(c.rest)+"</b>";
   }else{
     const selected=$("courier").dataset.lastPrepaid||"Trackon.in";$("courier").disabled=false;
     $("courier").innerHTML=["Trackon.in","ShreeMaruti.com","DTDC.in","Blue Dart","Ecom","Delhivery"].map(x=>'<option'+(x===selected?' selected':'')+'>'+x+'</option>').join("");
-    $("paymentNote").textContent="Prepaid में entered Main / Product Amount ही Amount Paid रहेगा।";
+    $("paymentNote").textContent="Prepaid में entered Main / Product Amount ही Amount Paid रहेगा।";$("codRateDisclosure").style.display="none";
     $("paymentPreview").innerHTML="Amount Paid: <b>"+money(c.productAmount)+"</b>";
   }
   updateDelivery();
@@ -182,9 +199,9 @@ function submitOrder(){
     alert("Name, Mobile, Address, valid Pincode, State, City, Post Office, Product और Main Amount भरें।");return;
   }
   if(cod&&c.weight<=0){alert("COD के लिए chargeable weight KG में भरें।");return}
-  if(cod&&c.total<COD_ADVANCE){alert("COD Grand Total कम से कम ₹500 होना चाहिए।");return}
+  if(cod&&c.productAmount<1300){alert("COD के लिए minimum product amount ₹1,300 चाहिए।");return}
   const b=$("deliveryBox"),payment=cod
-    ?`Main Product Amount: ${money(c.productAmount)}\nChargeable Weight: ${c.kg} KG\nCOD Courier Charges: ${money(c.courierCharge)} (₹299/KG)\nGrand Total: ${money(c.total)}\nAdvance Paid: ${money(c.advance)}\nRest on Delivery: ${money(c.rest)}`
+    ?`Main Product Amount: ${money(c.productAmount)}\nChargeable Weight: ${c.kg.toFixed(2)} KG\nCOD Courier Charges (rounded): ${money(c.courierCharge)}\nVAS (2%): ${money(c.vas)}\nCourier rates vary by city; final confirmed difference may be added to COD payable at delivery.\nGrand Total: ${money(c.total)}\nAdvance Paid: ${money(c.advance)}\nRest on Delivery: ${money(c.rest)}`
     :`Main Product Amount: ${money(c.productAmount)}\nDiscount: ₹0\nAmount Paid: ${money(c.productAmount)}`;
   const msg=`${cod?"🔴 COD":"🟢 Prepaid"} Order on WhatsApp
 
@@ -216,6 +233,7 @@ $("postofficeSelect").addEventListener("change",()=>{if(val("postofficeSelect"))
 document.querySelectorAll('input[name="orderType"]').forEach(x=>x.addEventListener("change",updatePayment));
 $("amount").addEventListener("input",updatePayment);$("weight").addEventListener("input",updatePayment);
 $("courier").addEventListener("change",()=>{$("courier").dataset.lastPrepaid=val("courier")});
+["boxL","boxW","boxH","state","city","pincode"].forEach(id=>$(id).addEventListener("input",updatePayment));
 $("submitButton").addEventListener("click",submitOrder);
 updatePayment();
 </script>
