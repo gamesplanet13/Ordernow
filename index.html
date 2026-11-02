@@ -162,7 +162,7 @@ function calculation(){
   const round100=x=>window.GPZForwardCOD?.round100(x)??Math.max(200,Math.ceil(x/100)*100);
   const quote=cod?window.GPZForwardCOD?.quote({city:val("city"),state:val("state"),chargeableKg:kg,
       codAmount:Math.max(0,productAmount-COD_ADVANCE),speed:"surface"}):null;
-  let courierCharge=cod?round100(quote?.raw||Math.ceil(kg)*COD_RATE):0;
+  let courierCharge=cod&&kg>0?round100(quote?.raw||Math.ceil(kg)*COD_RATE):0;
   let vas=cod?Math.ceil((productAmount+courierCharge)*.02):0;
   if(quote){
     const revised=window.GPZForwardCOD.quote({city:val("city"),state:val("state"),chargeableKg:kg,
