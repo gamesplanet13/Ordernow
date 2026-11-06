@@ -154,7 +154,14 @@ function applyPincode(){
   }
 }
 function type(){return document.querySelector('input[name="orderType"]:checked').value}
-function gpRural(){let house=document.getElementById('house').value.trim(),a=document.getElementById('areaType').value;if(!house||a==='rural')return true;if(a==='urban')return false;return /village|rural|gaon|गांव|गाँव/i.test(document.getElementById('address').value)}
+function gpRural(){
+  const po=val("postofficeManual")||val("postofficeSelect");
+  if(/\bB\.?\s*O\.?(?:$|\s)|\bBranch(?: Post)? Office\b/i.test(po))return true;
+  const house=document.getElementById('house').value.trim(),area=document.getElementById('areaType').value;
+  if(!house||area==='rural')return true;
+  if(area==='urban')return false;
+  return /village|rural|gaon|गांव|गाँव/i.test(document.getElementById('address').value);
+}
 function gpPostage(){
   if(!gpRural())return 0;
   const grams=Math.round(Number(document.getElementById('weight').value)*1000);
@@ -242,7 +249,8 @@ Courier Company: ${val("courier")}
   GPOrderRecords.send(msg);
 }
 $("pincode").addEventListener("input",applyPincode);
-$("postofficeSelect").addEventListener("change",()=>{if(val("postofficeSelect"))$("postofficeManual").value=val("postofficeSelect")});
+$("postofficeSelect").addEventListener("change",()=>{if(val("postofficeSelect"))$("postofficeManual").value=val("postofficeSelect");updatePayment()});
+$("postofficeManual").addEventListener("input",updatePayment);
 document.querySelectorAll('input[name="orderType"]').forEach(x=>x.addEventListener("change",updatePayment));
 $("amount").addEventListener("input",updatePayment);$("weight").addEventListener("input",updatePayment);
 $("courier").addEventListener("change",()=>{$("courier").dataset.lastPrepaid=val("courier");updatePayment()});["house","areaType","address"].forEach(id=>$(id).addEventListener(id==="areaType"?"change":"input",updatePayment));
